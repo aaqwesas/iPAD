@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">iPAD</string>
+    <string name="Settings">Settings</string>
+    <string name="Home">Home</string>
+    <string name="Anomaly">Anomaly</string>
+    <string name="Main_Content">Main</string>
 </resources>
