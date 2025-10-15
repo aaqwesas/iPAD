@@ -2,6 +2,8 @@
     <string name="app_name">iPAD</string>
     <string name="Settings">Settings</string>
     <string name="Home">Home</string>
-    <string name="Anomaly">Anomaly</string>
+    <string name="Watchlist">Watchlist</string>
     <string name="Main_Content">Main</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
