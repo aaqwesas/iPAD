@@ -6,4 +6,13 @@
     <string name="Main_Content">Main</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="arrow_right">arrow_right</string>
+    <string name="logout">Logout</string>
+    <string name="ic_logout">ic_logout</string>
+    <string name="right_arrow">right_arrow</string>
+    <string name="about">About</string>
+    <string name="info">info</string>
+    <string name="notifications">Notifications</string>
+    <string name="avatar">avatar</string>
+    <string name="Profile">Profile</string>
 </resources>

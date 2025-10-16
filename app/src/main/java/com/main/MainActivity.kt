@@ -9,6 +9,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.main.Fragment.HomeFragment
 import com.main.Fragment.SettingsFragment
 import com.main.Fragment.WatchlistFragment
+import com.main.Fragment.ProfileFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home -> HomeFragment()
                 R.id.nav_favorite -> WatchlistFragment()
                 R.id.nav_settings -> SettingsFragment()
+                R.id.nav_profile -> ProfileFragment()
                 else -> null
             }
 

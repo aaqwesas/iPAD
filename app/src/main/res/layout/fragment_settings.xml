@@ -7,11 +7,5 @@
     android:gravity="center"
     tools:context="com.main.Fragment.SettingsFragment">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Settings Page"
-        android:textSize="24sp"
-        android:textStyle="bold" />
 
 </LinearLayout>

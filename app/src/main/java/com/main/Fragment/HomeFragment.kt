@@ -36,7 +36,7 @@ class HomeFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = StockAdapter { stock ->
-            // Handle stock item click (optional)
+            // Handle stock item click
         }
 
         recyclerView.apply {
@@ -49,7 +49,6 @@ class HomeFragment : Fragment() {
         progressBar.visibility = View.VISIBLE
 
         Thread {
-            Thread.sleep(500) // Simulate API call delay
 
             requireActivity().runOnUiThread {
                 val sampleStocks = listOf(
@@ -59,7 +58,7 @@ class HomeFragment : Fragment() {
                         price = 150.25,
                         change = 2.50,
                         changePercent = 1.69,
-                        iconResId = R.drawable.ic_default_stock // You can use specific icons
+                        iconResId = R.drawable.ic_default_stock
                     ),
                     Stock(
                         ticker = "GOOGL",
