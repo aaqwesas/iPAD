@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingVertical="8dp"
+    android:gravity="center_vertical">
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switch_condition"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp" />
+
+    <TextView
+        android:id="@+id/tv_condition_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Condition Name"
+        android:textSize="14sp"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/tv_condition_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Value"
+        android:textSize="14sp"
+        android:textColor="@color/gray"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp"
+        android:background="@drawable/bg_value_indicator"
+        android:layout_marginStart="8dp" />
+
+</LinearLayout>
