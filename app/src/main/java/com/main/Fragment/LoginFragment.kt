@@ -12,8 +12,14 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
 import com.google.android.material.textfield.TextInputEditText
-import com.main.MainActivity
+import com.main.api.RetrofitClient
+import com.main.models.TokenVerifyRequest
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.core.content.edit
+import com.main.MainActivity
 
 class LoginFragment : Fragment() {
 
@@ -41,16 +47,13 @@ class LoginFragment : Fragment() {
         btnLogin.setOnClickListener {
             val token = etToken.text.toString().trim()
             if (token.isNotEmpty()) {
-                //TODO: do a server request and get the actual token from database
-                // Save token and navigate to home
-                saveTokenAndNavigate(token)
+                verifyToken(token)
             } else {
                 Toast.makeText(context, "Please enter a token", Toast.LENGTH_SHORT).show()
             }
         }
 
         tvSignupLink.setOnClickListener {
-            // Navigate to signup fragment
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, SignupFragment())
                 .addToBackStack(null)
@@ -58,11 +61,31 @@ class LoginFragment : Fragment() {
         }
     }
 
+    private fun verifyToken(token: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.verifyToken(TokenVerifyRequest(token))
+                if (response.isSuccessful && response.body()?.valid == true) {
+                    // Token is valid, save and navigate
+                    withContext(Dispatchers.Main) {
+                        saveTokenAndNavigate(token)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Invalid token", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun saveTokenAndNavigate(token: String) {
         sharedPreferences.edit { putString("user_token", token) }
         Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-
-        // Navigate to main app using the MainActivity method
         (requireActivity() as MainActivity).showMainApp()
     }
 }
