@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">iPAD</string>
-    <string name="Settings">Settings</string>
+    <string name="Portfolio">Portfolio</string>
     <string name="Home">Home</string>
     <string name="Watchlist">Watchlist</string>
     <string name="Main_Content">Main</string>
@@ -15,4 +15,18 @@
     <string name="notifications">Notifications</string>
     <string name="avatar">avatar</string>
     <string name="Profile">Profile</string>
+    <string name="Password">Password</string>
+    <string name="enter_token">Enter Token</string>
+    <string name="enter_your_token_to_continue">Enter your token to continue</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="login">Login</string>
+    <string name="don_t_have_a_token_generate_one">Don\'t have a token? Generate one</string>
+    <string name="user">User</string>
+    <string name="create_account">Create Account</string>
+    <string name="generate_your_unique_token">Generate your unique token</string>
+    <string name="generate_token">Generate Token</string>
+    <string name="your_token">Your Token</string>
+    <string name="token_will_appear_here">Token will appear here</string>
+    <string name="copy_token">Copy Token</string>
+    <string name="already_have_a_token_login">Already have a token? Login</string>
 </resources>
