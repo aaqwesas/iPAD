@@ -10,6 +10,7 @@ import com.main.Fragment.HomeFragment
 import com.main.Fragment.SettingsFragment
 import com.main.Fragment.WatchlistFragment
 import com.main.Fragment.ProfileFragment
+import com.main.Fragment.TradingFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_favorite -> WatchlistFragment()
                 R.id.nav_settings -> SettingsFragment()
                 R.id.nav_profile -> ProfileFragment()
+                R.id.navigation_trading -> TradingFragment()
                 else -> null
             }
 

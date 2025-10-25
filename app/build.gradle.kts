@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,14 +5,12 @@ plugins {
 
 android {
     namespace = "com.example.ipad"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36  // Updated from 34 to 36
 
     defaultConfig {
         applicationId = "com.example.ipad"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 36  // Updated from 34 to 36
         versionCode = 1
         versionName = "1.0"
 
@@ -30,14 +26,18 @@ android {
             )
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_11
-        }
+        jvmToolchain(17)
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 }
 
@@ -47,8 +47,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.material3)
-    implementation("com.google.android.material:material:1.13.0")
+
+    // Add Material 3 if not already there
+    implementation("androidx.compose.material3:material3:1.1.2")
+    // Or if using the version catalog:
+    // implementation(libs.androidx.material3)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
