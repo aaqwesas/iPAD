@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
+import datetime
 import uuid
 
 from response_type import TokenResponse, TokenVerify, Stock, StockCreate
@@ -27,7 +27,8 @@ def generate_token_endpoint():
 
     with get_db_session() as db:
         existing_user = db.query(User).filter(User.token == token).first()
-
+        if existing_user:
+            token = generate_token()
         db_user = User(token=token)
         db.add(db_user)
     return {"token": token, "message": "Token generated successfully"}
@@ -64,7 +65,7 @@ def get_stock(symbol: str, db: Session = Depends(get_db_session)):
 
 @app.post("/api/stocks")
 def create_stock(stock: StockCreate, db: Session = Depends(get_db_session)):
-    """Create/update stock price (for testing - in production you'd have auth)"""
+    """Create/update stock price """
     db_stock = StockPrice(
         symbol=stock.symbol.upper(),
         price=stock.price,
@@ -73,14 +74,13 @@ def create_stock(stock: StockCreate, db: Session = Depends(get_db_session)):
         volume=stock.volume
     )
     db.add(db_stock)
-    db.commit()
     db.refresh(db_stock)
     return db_stock
 
 @app.get("/api/health")
 def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.utcnow()}
+    return {"status": "healthy", "timestamp": datetime.datetime.now(datetime.timezone.utc)}
 
 if __name__ == "__main__":
     import uvicorn
