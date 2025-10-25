@@ -31,39 +31,22 @@
                 android:gravity="center"
                 tools:ignore="UselessParent">
 
-                <ImageView
-                    android:id="@+id/iv_profile_image"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:contentDescription="@string/avatar"
-                    android:src="@drawable/profile"
-                    android:background="@drawable/circle_background"
-                    android:padding="8dp"
-                    android:layout_marginBottom="12dp" />
-
                 <TextView
                     android:id="@+id/tv_user_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="John Doe"
+                    android:text="@string/user"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@android:color/black" />
-
-                <TextView
-                    android:id="@+id/tv_user_email"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="john.doe@example.com"
-                    android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginTop="4dp" />
 
             </LinearLayout>
 
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
+
+
 
     <!-- Profile Options Section -->
     <androidx.cardview.widget.CardView
@@ -72,14 +55,16 @@
         app:cardElevation="4dp"
         app:cardCornerRadius="12dp">
 
+
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Account Settings -->
+            <!--  Password  -->
             <LinearLayout
-                android:id="@+id/ll_account_settings"
+                android:id="@+id/password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -90,8 +75,8 @@
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:contentDescription="@string/Settings"
-                    android:src="@drawable/settings"
+                    android:contentDescription="@string/Password"
+                    android:src="@drawable/password"
                     android:layout_marginEnd="16dp"
                     app:tint="@android:color/darker_gray" />
 
@@ -99,7 +84,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/Settings"
+                    android:text="@string/Password"
                     android:textSize="16sp"
                     android:textColor="@android:color/black" />
 
@@ -119,9 +104,16 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp" />
 
-            <!-- Watchlist -->
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E0E0E0"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp" />
+            <!-- Portfolio -->
             <LinearLayout
-                android:id="@+id/ll_watchlist"
+                android:id="@+id/portfolio"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -132,8 +124,8 @@
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:contentDescription="@string/Watchlist"
-                    android:src="@drawable/ic_watchlist"
+                    android:contentDescription="@string/Portfolio"
+                    android:src="@drawable/portfolio"
                     android:layout_marginEnd="16dp"
                     app:tint="@android:color/darker_gray" />
 
@@ -141,7 +133,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/Watchlist"
+                    android:text="@string/Portfolio"
                     android:textSize="16sp"
                     android:textColor="@android:color/black" />
 
@@ -153,6 +145,14 @@
                     app:tint="@android:color/darker_gray" />
 
             </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E0E0E0"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp" />
+
 
             <View
                 android:layout_width="match_parent"
@@ -203,40 +203,6 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp" />
 
-            <!-- About -->
-            <LinearLayout
-                android:id="@+id/ll_about"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical"
-                android:background="?android:attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/info"
-                    android:src="@drawable/about"
-                    android:layout_marginEnd="16dp"
-                    app:tint="@android:color/darker_gray" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/about"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/right_arrow"
-                    android:src="@drawable/ic_arrow_right"
-                    app:tint="@android:color/darker_gray" />
-
-            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"

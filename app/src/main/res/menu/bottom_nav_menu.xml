@@ -7,15 +7,9 @@
 
     <item
         android:enabled="true"
-        android:id="@+id/nav_favorite"
-        android:icon="@drawable/watchlist"
-        android:title="@string/Watchlist" />
-
-    <item
-        android:enabled="true"
-        android:id="@+id/nav_settings"
-        android:icon="@drawable/settings"
-        android:title="@string/Settings" />
+        android:id="@+id/nav_portfolio"
+        android:icon="@drawable/portfolio"
+        android:title="@string/Portfolio" />
 
     <item
         android:enabled="true"

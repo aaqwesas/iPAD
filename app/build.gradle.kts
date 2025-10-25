@@ -47,12 +47,11 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-
-    // Add Material 3 if not already there
-    implementation("androidx.compose.material3:material3:1.1.2")
-    // Or if using the version catalog:
-    // implementation(libs.androidx.material3)
-
+    implementation(libs.androidx.material3)
+    implementation("com.google.android.material:material:1.13.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
