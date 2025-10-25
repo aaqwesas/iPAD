@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.ipad"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.ipad"
@@ -38,6 +36,10 @@ android {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
         }
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 }
 

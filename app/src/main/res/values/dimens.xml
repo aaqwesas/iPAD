@@ -1,0 +1,6 @@
+<resources>
+    <dimen name="card_corner_radius">8dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="section_spacing">16dp</dimen>
+    <dimen name="item_spacing">8dp</dimen>
+</resources>
