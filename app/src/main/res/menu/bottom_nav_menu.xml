@@ -21,5 +21,10 @@
         android:id="@+id/nav_alert"
         android:icon="@android:drawable/ic_menu_edit"
         android:title="@string/Alerts" />
+  <!-- review this change please -->
+    <item
+        android:id="@+id/navigation_trading"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="@string/Trading" />
 
 </menu>
