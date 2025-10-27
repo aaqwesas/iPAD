@@ -82,6 +82,9 @@ def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "timestamp": datetime.datetime.now(datetime.timezone.utc)}
 
+
 if __name__ == "__main__":
     import uvicorn
+    from utils import setup_default_user
+    setup_default_user()
     uvicorn.run(app, host="0.0.0.0", port=8000)
