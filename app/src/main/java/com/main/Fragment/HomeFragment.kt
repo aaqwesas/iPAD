@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ipad.R
 import com.main.Data.Stock
 import com.main.Data.StockAdapter
+import com.main.Fragment.HistoricalFragment
+import android.widget.Button
 
 class HomeFragment : Fragment() {
 
@@ -114,5 +116,22 @@ class HomeFragment : Fragment() {
                 progressBar.visibility = View.GONE
             }
         }.start()
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        view.findViewById<Button>(R.id.btnTestHistorical)?.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.slide_in_right,
+                    R.anim.slide_out_left,
+                    R.anim.slide_in_left,
+                    R.anim.slide_out_right
+                )
+                .replace(R.id.fragment_container, HistoricalFragment.newInstance("TSLA"))
+                .addToBackStack(null)
+                .commit()
+        }
     }
 }

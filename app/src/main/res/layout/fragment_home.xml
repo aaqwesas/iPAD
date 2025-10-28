@@ -46,6 +46,14 @@
             android:layout_height="24dp"
             android:visibility="gone" />
 
+        <Button
+            android:id="@+id/btnTestHistorical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View TSLA History"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"/>
+
     </LinearLayout>
 
     <!-- Stock List -->
