@@ -22,7 +22,6 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- Profile Image -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -46,9 +45,6 @@
 
     </androidx.cardview.widget.CardView>
 
-
-
-    <!-- Profile Options Section -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -61,155 +57,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <!--  Password  -->
-            <LinearLayout
-                android:id="@+id/password"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical"
-                android:background="?android:attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/Password"
-                    android:src="@drawable/password"
-                    android:layout_marginEnd="16dp"
-                    app:tint="@android:color/darker_gray" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Password"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/arrow_right"
-                    android:src="@drawable/ic_arrow_right"
-                    app:tint="@android:color/darker_gray" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E0E0E0"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp" />
-
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E0E0E0"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp" />
-            <!-- Portfolio -->
-            <LinearLayout
-                android:id="@+id/portfolio"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical"
-                android:background="?android:attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/Portfolio"
-                    android:src="@drawable/portfolio"
-                    android:layout_marginEnd="16dp"
-                    app:tint="@android:color/darker_gray" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Portfolio"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/arrow_right"
-                    android:src="@drawable/ic_arrow_right"
-                    app:tint="@android:color/darker_gray" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E0E0E0"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp" />
-
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E0E0E0"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp" />
-
-            <!-- Notifications -->
-            <LinearLayout
-                android:id="@+id/ll_notifications"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical"
-                android:background="?android:attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/notifications"
-                    android:src="@drawable/notification"
-                    android:layout_marginEnd="16dp"
-                    app:tint="@android:color/darker_gray" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/notifications"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@string/arrow_right"
-                    android:src="@drawable/ic_arrow_right"
-                    app:tint="@android:color/darker_gray" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E0E0E0"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp" />
-
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E0E0E0"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp" />
 
             <!-- Logout -->
             <LinearLayout

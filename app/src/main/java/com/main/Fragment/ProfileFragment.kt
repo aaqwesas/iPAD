@@ -28,23 +28,12 @@ class ProfileFragment : Fragment() {
 
         sharedPreferences = requireContext().getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
 
-        view.findViewById<View>(R.id.portfolio).setOnClickListener {
-
-        }
-
-        view.findViewById<View>(R.id.password).setOnClickListener {
-
-        }
-
-        view.findViewById<View>(R.id.ll_notifications).setOnClickListener {
-
-        }
-
 
         view.findViewById<View>(R.id.ll_logout).setOnClickListener {
             handleLogout()
         }
     }
+
     private fun handleLogout() {
         // Clear the saved token
         sharedPreferences.edit { remove("user_token") }

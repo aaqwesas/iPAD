@@ -19,4 +19,6 @@ class PortfolioFragment : Fragment() {
     ): View? {
         return inflater.inflate(R.layout.fragment_portfolio, container, false)
     }
+
+
 }
