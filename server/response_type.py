@@ -7,7 +7,6 @@ class TokenResponse(BaseModel):
 
 class Stock(BaseModel):
     symbol: str
-    name: str
     price: float
     change: float
     change_percent: float
@@ -19,11 +18,11 @@ class Stock(BaseModel):
 
 class StockCreate(BaseModel):
     symbol: str
-    name: str
     price: float
     change: float
     change_percent: float
     volume: int
+    timestamp: datetime
 
 class TokenVerify(BaseModel):
     token: str

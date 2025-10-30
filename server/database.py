@@ -1,30 +1,34 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlmodel import create_engine, Session, SQLModel
 from contextlib import contextmanager
 
 from config import settings
 
-
-SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+if settings.DATABASE_URL.startswith("sqlite"):
+    # For SQLite
+    connect_args = {"check_same_thread": False}
+else:
+    # For PostgreSQL, MySQL, etc.
+    connect_args = {}
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
+    settings.DATABASE_URL,
+    echo=settings.SQL_ECHO,
+    connect_args=connect_args
 )
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
 @contextmanager
 def get_db_session():
-    """Context manager for database sessions"""
-    db = SessionLocal()
+    session = Session(engine)
     try:
-        yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
+        yield session
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        # logger.error(f"Database error: {e}", exc_info=True)
+        print(f"Database error: {e}")
+        raise  # Re-raise so caller (endpoint) can handle HTTP response
     finally:
-        db.close()
+        session.close()
+
+def create_tables():
+    """Create all tables"""
+    SQLModel.metadata.create_all(bind=engine)
