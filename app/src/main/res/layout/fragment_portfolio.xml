@@ -7,5 +7,209 @@
     android:gravity="center"
     tools:context="com.main.Fragment.PortfolioFragment">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/stock_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Tesla"
+            android:textSize="20sp"
+            android:layout_marginStart="180dp"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:id="@+id/ticket"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="TSLA"
+            android:layout_marginStart="190dp"
+            android:layout_marginTop="5dp"/>
+
+        <TextView
+            android:id="@+id/percentage_change"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="+10%"
+            android:layout_marginStart="190dp"
+            android:layout_marginTop="5dp"/>
+
+
+        <!--        candle chart view-->
+        <LinearLayout
+            android:id="@+id/chart_section"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:padding="16dp">
+
+            <!-- Candle chart placeholder -->
+            <FrameLayout
+                android:id="@+id/candle_chart_container"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:background="@drawable/chart_placeholder_bg"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Time scale buttons -->
+            <LinearLayout
+                android:id="@+id/time_scale_buttons"
+                style="?android:attr/buttonBarStyle"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/last_year"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="1 year" />
+
+                <Button
+                    android:id="@+id/last_month"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="1 month" />
+
+                <Button
+                    android:id="@+id/last_week"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="1 week" />
+
+                <Button
+                    android:id="@+id/last_24_hours"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="24 hours" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/stat_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="#111">
+
+            <!-- Stat 1 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/previous_close_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="11402.52"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Prev Close"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/darker_gray"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/day_high"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="11402.52"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Day High"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/darker_gray"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/day_low"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="11402.52"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Day Low"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/darker_gray"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/volume"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="11402.52"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Volume"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/darker_gray"/>
+
+            </LinearLayout>
+
+            <!-- Repeat similar blocks for Day Low, Day High, Volume -->
+        </LinearLayout>
+
+
+
+    </LinearLayout>
 </LinearLayout>
