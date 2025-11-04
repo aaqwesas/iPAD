@@ -13,6 +13,7 @@ import com.main.Fragment.PortfolioFragment
 import com.main.Fragment.ProfileFragment
 import com.main.Fragment.AlertsFragment
 import com.main.Fragment.TradingFragment
+import com.main.Fragment.TestAlertsFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -55,6 +56,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_profile -> ProfileFragment()
                 R.id.nav_alert -> AlertsFragment()
                 R.id.navigation_trading -> TradingFragment()
+                R.id.nav_test_alerts -> TestAlertsFragment()
                 else -> null
             }
 
