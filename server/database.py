@@ -23,9 +23,8 @@ def get_db_session():
         session.commit()
     except Exception as e:
         session.rollback()
-        # logger.error(f"Database error: {e}", exc_info=True)
         print(f"Database error: {e}")
-        raise  # Re-raise so caller (endpoint) can handle HTTP response
+        raise
     finally:
         session.close()
 

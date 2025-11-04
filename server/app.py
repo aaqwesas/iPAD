@@ -1,19 +1,48 @@
-from typing import List
+from typing import List, AsyncGenerator
 import datetime
 import uuid
+from contextlib import asynccontextmanager
 
 from sqlmodel import select
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from response_type import TokenResponse, TokenVerify, Stock, StockCreate
 from database import get_db_session, create_tables
 from models import User, StockPrice
+from utils import create_data_fetcher, setup_database
 
 
 # Create tables
 create_tables()
 
-app = FastAPI(title="Stock API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    TICKERS = ["AAPL", "TSLA", "^GSPC", "0700.HK"]
+    
+
+    data_fetcher = create_data_fetcher(tickers=TICKERS)
+    
+    try:
+        yield
+    finally:
+        data_fetcher.cancel()
+
+def create_app() -> FastAPI:
+
+    app = FastAPI(title="Stock API", version="1.0.0", lifespan=lifespan)
+    app.state
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    return app
+
+app = create_app()
 
 
 def generate_token() -> str:
@@ -106,6 +135,5 @@ def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    from utils import setup_database
     setup_database()
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,4 +1,5 @@
 
+import asyncio
 from sqlmodel import Session, select
 from database import get_db_session
 from models import User, StockPrice
@@ -16,19 +17,10 @@ def setup_default_user() -> None:
             print("Test user added")
             return
         print("Test user exists")
-
-def process_ticker(ticker: str, db: Session) -> None:
-    data: pd.DataFrame = yf.download(
-        tickers=ticker,
-        period="1d",
-        interval="1m",
-        auto_adjust=True,
-        multi_level_index=False
-    ) # type: ignore
-    
+        
+def preprocess_data(ticker: str, data: pd.DataFrame) -> StockPrice:
     latest = data.iloc[-1]
     current_price = float(latest['Close'])
-    
     
     if len(data) >= 2:
         prev_close = float(data.iloc[-2]['Close'])
@@ -39,7 +31,8 @@ def process_ticker(ticker: str, db: Session) -> None:
         change_percent = 0.0
         
     volume = int(latest['Volume']) if pd.notna(latest['Volume']) else 0
-
+    
+    
     stock_record = StockPrice(
         symbol=ticker,
         price=round(current_price, 2),
@@ -49,7 +42,51 @@ def process_ticker(ticker: str, db: Session) -> None:
         timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     
+    return stock_record
+    
+
+def process_ticker(ticker: str, db: Session, interval: str, period: str) -> None:
+    data: pd.DataFrame = yf.download(
+        tickers=ticker,
+        period=period,
+        interval=interval,
+        auto_adjust=True,
+        multi_level_index=False
+    ) # type: ignore
+    
+    stock_record = preprocess_data(ticker=ticker, data=data)
+    
     db.add(stock_record)
+    
+    
+async def fetch_and_store_stock_data(tickers: list[str]):
+    """Fetch latest 1-min data for all tickers and store in DB."""
+    with get_db_session() as db:
+        while True:
+            start = asyncio.get_running_loop().time()
+
+            for ticker in tickers:
+                # Run blocking yfinance call in thread pool
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(
+                    None,
+                    process_ticker,
+                    ticker,
+                    db,
+                    "1m",
+                    "1d",
+                    
+                ) # type: ignore
+            
+
+
+            # Sleep for remainder of interval
+            elapsed = asyncio.get_running_loop().time() - start
+            sleep_time = max(0, 60 - elapsed)
+            await asyncio.sleep(sleep_time)
+
+def create_data_fetcher(tickers: list[str]):
+    return asyncio.create_task(fetch_and_store_stock_data(tickers=tickers))
     
 def insert_stock_data():
     """Download and insert latest stock data as new records"""
@@ -57,11 +94,7 @@ def insert_stock_data():
     
     with get_db_session() as db:
         for ticker in tickers:
-            process_ticker(ticker=ticker, db=db)
-
-
-
-
+            process_ticker(ticker=ticker, db=db, period="5d", interval="1m")
 
 def setup_database():
     """Setup both default user and stock data"""
