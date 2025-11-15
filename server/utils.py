@@ -21,6 +21,11 @@ def setup_default_user() -> None:
 def preprocess_data(ticker: str, data: pd.DataFrame) -> StockPrice:
     latest = data.iloc[-1]
     current_price = float(latest['Close'])
+
+    open_price = float(latest['Open'])
+    high_price = float(latest['High'])
+    low_price = float(latest['Low'])
+    close_price = float(latest['Close'])
     
     if len(data) >= 2:
         prev_close = float(data.iloc[-2]['Close'])
@@ -39,7 +44,11 @@ def preprocess_data(ticker: str, data: pd.DataFrame) -> StockPrice:
         change=round(change, 2),
         change_percent=round(change_percent, 2),
         volume=volume,
-        timestamp=datetime.datetime.now(datetime.timezone.utc)
+        timestamp=datetime.datetime.now(datetime.timezone.utc),
+        open_price=round(open_price, 2),
+        high_price=round(high_price, 2),
+        low_price=round(low_price, 2),
+        close_price=round(close_price, 2)
     )
     
     return stock_record

@@ -12,6 +12,10 @@ class Stock(BaseModel):
     change_percent: float
     volume: int
     timestamp: datetime
+    open_price: float
+    high_price: float
+    low_price: float
+    close_price: float
 
     class Config:
         from_attributes = True
