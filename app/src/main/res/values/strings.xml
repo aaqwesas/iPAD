@@ -32,4 +32,11 @@
     <string name="token_will_appear_here">Token will appear here</string>
     <string name="copy_token">Copy Token</string>
     <string name="already_have_a_token_login">Already have a token? Login</string>
+
+    <!-- Stock related strings -->
+    <string name="stock_price_format">$%.2f</string>
+    <string name="stock_change_positive">+%s</string>
+    <string name="stock_change_negative">-%s</string>
+    <string name="stock_change_percent_positive">(+%s)</string>
+    <string name="stock_change_percent_negative">(-%s)</string>
 </resources>

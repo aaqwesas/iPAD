@@ -7,6 +7,8 @@ import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import com.example.ipad.R
 import com.main.Data.Stock
+import java.util.Locale
+import kotlin.math.abs
 
 class StockItemView @JvmOverloads constructor(
     context: Context,
@@ -24,32 +26,21 @@ class StockItemView @JvmOverloads constructor(
 
     fun setStock(stock: Stock) {
         tvStockTicker.text = stock.ticker
-        tvStockName.text = stock.name
-        tvStockPrice.text = "$${String.format("%.2f", stock.price)}"
+        tvStockPrice.text = context.getString(R.string.stock_price_format, stock.price)
 
-        val changeText = String.format("%.2f", Math.abs(stock.change))
-        val changePercentText = String.format("%.2f%%", Math.abs(stock.changePercent))
+        val changeText = String.format(Locale.US, "%.2f", abs(stock.change))
+        val changePercentText = String.format(Locale.US, "%.2f%%", abs(stock.changePercent))
 
         if (stock.change >= 0) {
-            tvStockChange.text = "+$changeText"
-            tvStockChangePercent.text = "(+$changePercentText)"
+            tvStockChange.text = context.getString(R.string.stock_change_positive, changeText)
+            tvStockChangePercent.text = context.getString(R.string.stock_change_percent_positive, changePercentText)
             tvStockChange.setTextColor(ContextCompat.getColor(context, android.R.color.holo_green_dark))
             tvStockChangePercent.setTextColor(ContextCompat.getColor(context, android.R.color.holo_green_dark))
         } else {
-            tvStockChange.text = "-$changeText"
-            tvStockChangePercent.text = "(-$changePercentText)"
-            tvStockChange.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    android.R.color.holo_red_dark
-                )
-            )
-            tvStockChangePercent.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    android.R.color.holo_red_dark
-                )
-            )
+            tvStockChange.text = context.getString(R.string.stock_change_negative, changeText)
+            tvStockChangePercent.text = context.getString(R.string.stock_change_percent_negative, changePercentText)
+            tvStockChange.setTextColor(ContextCompat.getColor(context, android.R.color.holo_red_dark))
+            tvStockChangePercent.setTextColor(ContextCompat.getColor(context, android.R.color.holo_red_dark))
         }
     }
 }

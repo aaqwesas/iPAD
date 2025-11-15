@@ -27,22 +27,10 @@
             android:textColor="@android:color/black"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintWidth_percent="0.3" />
-
-        <!-- Name -->
-        <TextView
-            android:id="@+id/tv_stock_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Apple Inc."
-            android:textColor="@android:color/darker_gray"
-            android:textSize="14sp"
-
-            app:layout_constraintTop_toBottomOf="@id/tv_stock_ticker"
-            app:layout_constraintWidth_percent="0.3" />
+            android:gravity="center"
+            app:layout_constraintWidth_percent="0.3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <!-- Price -->
         <TextView
@@ -56,15 +44,15 @@
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guideline"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <!-- Change Value -->
         <TextView
             android:id="@+id/tv_stock_change"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
             android:ellipsize="end"
             android:gravity="end"
             android:maxLines="1"
@@ -73,14 +61,13 @@
             android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Change Percent -->
         <TextView
             android:id="@+id/tv_stock_change_percent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:gravity="end"

@@ -11,6 +11,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ipad.R
 import com.main.Data.Stock
 import com.main.Data.StockAdapter
+import com.main.api.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeFragment : Fragment() {
 
@@ -29,7 +34,7 @@ class HomeFragment : Fragment() {
         progressBar = view.findViewById(R.id.progress_bar)
 
         setupRecyclerView()
-        loadSampleData()
+        loadStockData()
 
         return view
     }
@@ -45,39 +50,32 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun loadSampleData() {
+    private fun loadStockData() {
         progressBar.visibility = View.VISIBLE
 
-        Thread {
+        CoroutineScope(Dispatchers.IO).launch {
+            val response = RetrofitClient.apiService.getStocks()
+            if (response.isSuccessful) {
+                val stocks = response.body()?.map { apiStock ->
+                    Stock(
+                        ticker = apiStock.symbol,
+                        price = apiStock.price,
+                        change = apiStock.change,
+                        changePercent = apiStock.change_percent,
+                        volume = apiStock.volume
+                    )
+                } ?: emptyList()
 
-            requireActivity().runOnUiThread {
-                val sampleStocks = listOf(
-                    Stock(
-                        ticker = "AAPL",
-                        name = "Apple Inc.",
-                        price = 150.25,
-                        change = 2.50,
-                        changePercent = 1.69,
-                    ),
-                    Stock(
-                        ticker = "GOOGL",
-                        name = "Alphabet Inc.",
-                        price = 2750.50,
-                        change = -15.20,
-                        changePercent = -0.55,
-                    ),
-                    Stock(
-                        ticker = "MSFT",
-                        name = "Microsoft Corp.",
-                        price = 330.75,
-                        change = 5.25,
-                        changePercent = 1.61,
-                    ),
-                )
-
-                adapter.updateStocks(sampleStocks)
-                progressBar.visibility = View.GONE
+                withContext(Dispatchers.Main) {
+                    adapter.updateStocks(stocks)
+                    progressBar.visibility = View.GONE
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    progressBar.visibility = View.GONE
+                    // Handle error (show message, retry, etc.)
+                }
             }
-        }.start()
+        }
     }
 }
