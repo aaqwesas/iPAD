@@ -7,9 +7,9 @@ from sqlmodel import select
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from response_type import TokenResponse, TokenVerify, Stock, StockCreate
+from response_type import TokenResponse, TokenVerify, Stock, StockCreate, StockHistorical
 from database import get_db_session, create_tables
-from models import User, StockPrice
+from models import User, StockPrice, StockHistoricalData
 from utils import create_data_fetcher, setup_database
 
 
@@ -96,6 +96,21 @@ def get_stocks():
             if stock.symbol not in unique_stocks:
                 unique_stocks[stock.symbol] = Stock.model_validate(stock)
         return list(unique_stocks.values())
+
+@app.get("/api/stocks/history/{symbol}", response_model=List[StockHistorical])
+def get_stock_history(symbol: str):
+    """Get historical stock data for a specific symbol"""
+    with get_db_session() as db:
+        statement = (
+            select(StockHistoricalData)
+            .where(StockHistoricalData.symbol == symbol.upper())
+            .order_by(StockHistoricalData.date.desc())
+        )
+        stocks = db.exec(statement).all()
+        print(stocks)
+        if not stocks:
+            raise HTTPException(status_code=404, detail="Stock not found")
+        return [StockHistorical.model_validate(stock) for stock in stocks]
 
 @app.get("/api/stocks/{symbol}", response_model=Stock)
 def get_stock(symbol: str):

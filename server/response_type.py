@@ -20,6 +20,18 @@ class Stock(BaseModel):
     class Config:
         from_attributes = True
 
+class StockHistorical(BaseModel):
+    symbol: str
+    date: datetime
+    open_price: float
+    high_price: float
+    low_price: float
+    close_price: float
+    volume: int
+
+    class Config:
+        from_attributes = True
+
 class StockCreate(BaseModel):
     symbol: str
     price: float

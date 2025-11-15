@@ -23,3 +23,15 @@ class StockPrice(SQLModel, table=True):
     high_price: Optional[float] = None
     low_price: Optional[float] = None
     close_price: Optional[float] = None
+
+class StockHistoricalData(SQLModel, table=True):
+    __tablename__: str = "stock_historical_data"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    symbol: str = Field(index=True)
+    date: datetime
+    open_price: float
+    high_price: float
+    low_price: float
+    close_price: float
+    volume: int
