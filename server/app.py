@@ -105,7 +105,6 @@ def get_stock_history(symbol: str):
             .order_by(StockHistoricalData.date.desc())
         )
         stocks = db.exec(statement).all()
-        print(stocks)
         if not stocks:
             raise HTTPException(status_code=404, detail="Stock not found")
         return [StockHistorical.model_validate(stock) for stock in stocks]
