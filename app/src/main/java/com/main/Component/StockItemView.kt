@@ -16,7 +16,6 @@ class StockItemView @JvmOverloads constructor(
 
     private val view = LayoutInflater.from(context).inflate(R.layout.stock_item_view, this, true)
 
-    private val ivStockIcon = view.findViewById<android.widget.ImageView>(R.id.iv_stock_icon)
     private val tvStockTicker = view.findViewById<android.widget.TextView>(R.id.tv_stock_ticker)
     private val tvStockName = view.findViewById<android.widget.TextView>(R.id.tv_stock_name)
     private val tvStockPrice = view.findViewById<android.widget.TextView>(R.id.tv_stock_price)
@@ -39,12 +38,18 @@ class StockItemView @JvmOverloads constructor(
         } else {
             tvStockChange.text = "-$changeText"
             tvStockChangePercent.text = "(-$changePercentText)"
-            tvStockChange.setTextColor(ContextCompat.getColor(context, android.R.color.holo_red_dark))
-            tvStockChangePercent.setTextColor(ContextCompat.getColor(context, android.R.color.holo_red_dark))
-        }
-
-        if (stock.iconResId != 0) {
-            ivStockIcon.setImageResource(stock.iconResId)
+            tvStockChange.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    android.R.color.holo_red_dark
+                )
+            )
+            tvStockChangePercent.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    android.R.color.holo_red_dark
+                )
+            )
         }
     }
 }

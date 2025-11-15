@@ -31,7 +31,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def create_app() -> FastAPI:
 
     app = FastAPI(title="Stock API", version="1.0.0", lifespan=lifespan)
-    app.state
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -56,7 +55,6 @@ def generate_token_endpoint():
     token = generate_token()
 
     with get_db_session() as db:
-        # Use select() instead of db.query()
         statement = select(User).where(User.token == token)
         existing_user = db.exec(statement).first()
         if existing_user:

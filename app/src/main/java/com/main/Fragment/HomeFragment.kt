@@ -58,7 +58,6 @@ class HomeFragment : Fragment() {
                         price = 150.25,
                         change = 2.50,
                         changePercent = 1.69,
-                        iconResId = R.drawable.ic_default_stock
                     ),
                     Stock(
                         ticker = "GOOGL",
@@ -66,7 +65,6 @@ class HomeFragment : Fragment() {
                         price = 2750.50,
                         change = -15.20,
                         changePercent = -0.55,
-                        iconResId = R.drawable.ic_default_stock
                     ),
                     Stock(
                         ticker = "MSFT",
@@ -74,40 +72,7 @@ class HomeFragment : Fragment() {
                         price = 330.75,
                         change = 5.25,
                         changePercent = 1.61,
-                        iconResId = R.drawable.ic_default_stock
                     ),
-                    Stock(
-                        ticker = "TSLA",
-                        name = "Tesla Inc.",
-                        price = 245.30,
-                        change = 12.40,
-                        changePercent = 5.32,
-                        iconResId = R.drawable.ic_default_stock
-                    ),
-                    Stock(
-                        ticker = "AMZN",
-                        name = "Amazon.com Inc.",
-                        price = 125.50,
-                        change = -0.75,
-                        changePercent = -0.60,
-                        iconResId = R.drawable.ic_default_stock
-                    ),
-                    Stock(
-                        ticker = "META",
-                        name = "Meta Platforms Inc.",
-                        price = 485.20,
-                        change = 8.75,
-                        changePercent = 1.84,
-                        iconResId = R.drawable.ic_default_stock
-                    ),
-                    Stock(
-                        ticker = "NFLX",
-                        name = "Netflix Inc.",
-                        price = 675.80,
-                        change = -12.30,
-                        changePercent = -1.79,
-                        iconResId = R.drawable.ic_default_stock
-                    )
                 )
 
                 adapter.updateStocks(sampleStocks)

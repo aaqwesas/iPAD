@@ -12,38 +12,21 @@
     app:cardBackgroundColor="@android:color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
+        android:layout_width="383dp"
         android:layout_height="wrap_content"
-        android:padding="16dp">
-
-        <!-- Stock Icon -->
-        <ImageView
-            android:id="@+id/iv_stock_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="12dp"
-            android:contentDescription="Stock icon"
-            android:src="@drawable/ic_default_stock"
-            android:background="@drawable/circle_background"
-            android:padding="6dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+        android:padding="10dp">
 
         <!-- Ticker -->
         <TextView
             android:id="@+id/tv_stock_ticker"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="AAPL"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
             android:ellipsize="end"
             android:maxLines="1"
-            app:layout_constraintStart_toEndOf="@id/iv_stock_icon"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/tv_stock_price"
+            android:text="AAPL"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
             app:layout_constraintWidth_percent="0.3" />
 
         <!-- Name -->
@@ -51,15 +34,14 @@
             android:id="@+id/tv_stock_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Apple Inc."
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            app:layout_constraintStart_toEndOf="@id/iv_stock_icon"
+            android:text="Apple Inc."
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+
             app:layout_constraintTop_toBottomOf="@id/tv_stock_ticker"
-            app:layout_constraintEnd_toStartOf="@id/tv_stock_price"
             app:layout_constraintWidth_percent="0.3" />
 
         <!-- Price -->
@@ -67,44 +49,45 @@
             android:id="@+id/tv_stock_price"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="end"
+            android:maxLines="1"
             android:text="$150.25"
+            android:textColor="@android:color/black"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:gravity="end"
-            android:ellipsize="end"
-            android:maxLines="1"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guideline"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Change Value -->
         <TextView
             android:id="@+id/tv_stock_change"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ellipsize="end"
+            android:gravity="end"
+            android:maxLines="1"
             android:text="+2.50"
+            android:textColor="@android:color/holo_green_dark"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@android:color/holo_green_dark"
-            android:gravity="end"
-            android:ellipsize="end"
-            android:maxLines="1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            />
 
         <!-- Change Percent -->
         <TextView
             android:id="@+id/tv_stock_change_percent"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="(1.69%)"
-            android:textSize="12sp"
-            android:textColor="@android:color/holo_green_dark"
-            android:gravity="end"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_marginTop="2dp"
             android:ellipsize="end"
+            android:gravity="end"
             android:maxLines="1"
+            android:text="(1.69%)"
+            android:textColor="@android:color/holo_green_dark"
+            android:textSize="12sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_stock_change" />
 

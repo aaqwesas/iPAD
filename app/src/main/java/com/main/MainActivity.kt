@@ -54,9 +54,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home -> HomeFragment()
                 R.id.nav_portfolio -> PortfolioFragment()
                 R.id.nav_profile -> ProfileFragment()
-                R.id.nav_alert -> AlertsFragment()
-                R.id.navigation_trading -> TradingFragment()
-                R.id.nav_test_alerts -> TestAlertsFragment()
+//                R.id.nav_alert -> AlertsFragment()
+//                R.id.navigation_trading -> TradingFragment()
+//                R.id.nav_test_alerts -> TestAlertsFragment()
                 else -> null
             }
 
