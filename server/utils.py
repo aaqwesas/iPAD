@@ -18,6 +18,15 @@ def setup_default_user() -> None:
             return
         print("Test user exists")
 
+def clear_stock_history() -> None:
+    """Clear all existing stock historical data"""
+    with get_db_session() as db:
+        statement = select(StockHistoricalData)
+        records = db.exec(statement).all()
+        for record in records:
+            db.delete(record)
+    print("Cleared existing stock historical data")
+
 def setup_default_stock_data() -> None:
     tickers = ['0700.HK', 'TSLA', '^HSI', '^GSPC']
     with get_db_session() as db:
@@ -139,6 +148,7 @@ def insert_stock_data():
 def setup_database():
     """Setup both default user and stock data"""
     setup_default_user()
+    clear_stock_history()
     setup_default_stock_data()
     insert_stock_data()
 
