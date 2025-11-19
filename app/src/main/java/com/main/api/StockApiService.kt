@@ -1,6 +1,5 @@
 package com.main.api
 
-
 import retrofit2.Response
 import retrofit2.http.*
 import com.main.models.TokenResponse
@@ -20,4 +19,14 @@ interface StockApiService {
 
     @GET("api/stocks/{symbol}")
     suspend fun getStock(@Path("symbol") symbol: String): Response<Stock>
+
+//    @POST("api/stocks")
+//    suspend fun insertStock(@Body stock: Stock): Response<>
+
+    @GET("api/stocks/history/{symbol}")
+    suspend fun getStockHistory(@Path("symbol") symbol: String): Response<List<Stock>>
+
+    @GET("api/health")
+    suspend fun checkhealth(): Response<Map<String, String>>
+
 }
