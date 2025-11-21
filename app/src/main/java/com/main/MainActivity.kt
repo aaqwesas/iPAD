@@ -1,7 +1,8 @@
 package com.main
 
 import android.Manifest
-import android.content.SharedPreferences
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -11,98 +12,76 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.snackbar.Snackbar
+import com.main.Fragment.AlertsFragment
 import com.main.Fragment.HomeFragment
-import com.main.Fragment.LoginFragment
 import com.main.Fragment.PortfolioFragment
 import com.main.Fragment.ProfileFragment
-import com.main.Fragment.AlertsFragment
-import com.main.Fragment.TradingFragment
-import com.main.Fragment.TestAlertsFragment
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var bottomNavigationView: BottomNavigationView
-    private lateinit var sharedPreferences: SharedPreferences
-    private fun requestNotificationPermission() {
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
-                when {
-                    ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) == PackageManager.PERMISSION_GRANTED -> {
-                        // Permission already granted - proceed
-                    }
-                    else -> {
-                        // Request permission
-                        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                }
-            }
-            else -> {
-                // No permission needed for older Android versions
-            }
-        }
-    }
+    private lateinit var googleSignInClient: GoogleSignInClient
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Permission granted - proceed with notification setup
-            // You can now show notifications
+            // Permission granted
         } else {
-
+            // Permission denied
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         requestNotificationPermission()
 
-        sharedPreferences = getSharedPreferences("TokenPrefs", MODE_PRIVATE)
         bottomNavigationView = findViewById(R.id.bottom_navigation)
 
-        // Check if user has a saved token
-        val savedToken = sharedPreferences.getString("user_token", "")
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        if (savedToken.isNullOrEmpty()) {
-            // No token found, show login screen
-            loadFragment(LoginFragment())
-            // Hide bottom navigation when showing login
-            bottomNavigationView.visibility = android.view.View.GONE
+        val sharedPreferences = getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
+        val token = sharedPreferences.getString("user_token", null)
+
+        if (token == null) {
+            showLoginScreen(false)
         } else {
-            // Token exists, show main app with bottom navigation
-            bottomNavigationView.visibility = android.view.View.VISIBLE
-
             if (savedInstanceState == null) {
                 loadFragment(HomeFragment())
                 bottomNavigationView.selectedItemId = R.id.nav_home
             }
-
             setupBottomNavigation()
+        }
+    }
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 
     private fun setupBottomNavigation() {
         bottomNavigationView.setOnItemSelectedListener { item ->
-            val selectedFragment: Fragment? = when (item.itemId) {
+            val selectedFragment: Fragment = when (item.itemId) {
                 R.id.nav_home -> HomeFragment()
                 R.id.nav_portfolio -> PortfolioFragment()
                 R.id.nav_profile -> ProfileFragment()
                 R.id.nav_alert -> AlertsFragment()
-//                R.id.navigation_trading -> TradingFragment()
-//                R.id.nav_test_alerts -> TestAlertsFragment()
-                else -> null
+                else -> HomeFragment() // Default to HomeFragment
             }
-
-            selectedFragment?.let {
-                loadFragment(it)
-                true
-            } ?: false
+            loadFragment(selectedFragment)
+            true
         }
     }
 
@@ -112,23 +91,31 @@ class MainActivity : AppCompatActivity() {
                 R.anim.slide_in_right, // enter
                 R.anim.slide_out_left, // exit
                 R.anim.slide_in_left, // popEnter
-                R.anim.slide_out_left // popExit
+                R.anim.slide_out_right // popExit
             )
             .replace(R.id.fragment_container, fragment)
             .commitNow()
     }
 
-    // Method to switch to main app after login
-    fun showMainApp() {
-        bottomNavigationView.visibility = android.view.View.VISIBLE
-        loadFragment(HomeFragment())
-        bottomNavigationView.selectedItemId = R.id.nav_home
-        setupBottomNavigation()
-    }
+    fun showLoginScreen(performSignOut: Boolean = true) {
+        // Always clear the local shared preferences
+        val sharedPreferences = getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit()
+            .remove("user_token")
+            .remove("user_email")
+            .apply()
 
-    // Method to show login screen after logout
-    fun showLoginScreen() {
-        bottomNavigationView.visibility = android.view.View.GONE
-        loadFragment(LoginFragment())
+        if (performSignOut) {
+            // Use revokeAccess() for a complete sign out to clear getLastSignedInAccount
+            googleSignInClient.revokeAccess().addOnCompleteListener(this) {
+                val intent = Intent(this, LoginActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
+        } else {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 }

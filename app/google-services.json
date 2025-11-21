@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "118628139920",
+    "project_id": "ipad-f5488",
+    "storage_bucket": "ipad-f5488.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:118628139920:android:edc6b9bc8d6bd543bde915",
+        "android_client_info": {
+          "package_name": "com.example.ipad"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "118628139920-7rnsfq25e6na5hgon4gt2fum0si30034.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ipad",
+            "certificate_hash": "d8bea40df6dacf4893d6aa5a32418f09d31169b7"
+          }
+        },
+        {
+          "client_id": "118628139920-lsp9dot932pvmlbrud8925ktc3ecpjo5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBL1lXhKoYu98I4dS3qQG8UJwPqcZwXApw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "118628139920-lsp9dot932pvmlbrud8925ktc3ecpjo5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
