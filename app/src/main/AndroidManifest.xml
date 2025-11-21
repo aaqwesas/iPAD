@@ -26,6 +26,10 @@
         <activity
             android:name="com.main.MainActivity"
             android:exported="false" />
+        <activity
+            android:name="com.main.SignupActivity"
+            android:exported="false"
+            android:parentActivityName=".LoginActivity"/>
     </application>
 
 </manifest>

@@ -55,6 +55,11 @@ class LoginActivity : AppCompatActivity() {
         binding.googleSignInButton.setOnClickListener {
             signInWithGoogle()
         }
+
+        binding.signUpPrompt.setOnClickListener {
+            val intent = Intent(this, SignupActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun signInWithGoogle() {
@@ -93,6 +98,21 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
+        // Check credentials against the simulated database
+        val userAccounts = getSharedPreferences("UserAccounts", Context.MODE_PRIVATE)
+        val savedPassword = userAccounts.getString(email, null)
+
+        if (savedPassword == null) {
+            Toast.makeText(this, "No account found with this email. Please sign up.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        if (savedPassword != password) {
+            Toast.makeText(this, "Invalid email or password.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Credentials are correct, proceed with login
         val dummyToken = "token_for_$email"
         saveCredentials(dummyToken, email)
         
