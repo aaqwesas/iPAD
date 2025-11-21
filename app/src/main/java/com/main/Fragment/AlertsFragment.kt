@@ -1,12 +1,21 @@
 package com.main.Fragment
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
 import com.example.ipad.databinding.FragmentAlertsBinding
+import com.main.MainActivity
 
 class AlertsFragment : Fragment() {
 
@@ -261,6 +270,9 @@ class AlertsFragment : Fragment() {
 
         shownAlerts.add(alertKey)
 
+        // Create notification
+        createNotification(condition, stockData)
+
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.custom_alert_dialog, null)
 
         val title = dialogView.findViewById<android.widget.TextView>(R.id.tv_alert_title)
@@ -341,6 +353,76 @@ class AlertsFragment : Fragment() {
         }, 10000)
 
         dialog.show()
+    }
+
+    private fun createNotification(condition: AlertCondition, stockData: StockData) {
+        val channelId = "stock_alerts_channel"
+        val notificationId = System.currentTimeMillis().toInt() // Unique ID for each notification
+
+        // Create notification channel (required for Android 8.0+)
+        val channel = NotificationChannel(
+            channelId,
+            "Stock Alerts",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Notifications for stock price alerts"
+            enableVibration(true)
+            enableLights(true)
+            lightColor = android.graphics.Color.BLUE
+        }
+
+        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+
+        // Create intent for when notification is tapped
+        val intent = Intent(requireContext(), MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            requireContext(),
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Build notification
+        val notification = NotificationCompat.Builder(requireContext(), channelId)
+            .setSmallIcon(R.drawable.notification) // Add your notification icon
+            .setContentTitle(getNotificationTitle(condition))
+            .setContentText(getNotificationMessage(condition, stockData))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true) // Dismiss notification when tapped
+            .setContentIntent(pendingIntent)
+            .setVibrate(longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400))
+            .setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION))
+
+        // Show notification
+        with(NotificationManagerCompat.from(requireContext())) {
+            notify(notificationId, notification.build())
+        }
+    }
+
+    private fun getNotificationTitle(condition: AlertCondition): String {
+        return when (condition.type) {
+            AlertType.PRICE_ABOVE -> "🎯 Price Target Reached!"
+            AlertType.PRICE_BELOW -> "📉 Price Drop Alert!"
+            AlertType.PERCENTAGE_RISE -> "📈 Significant Rise!"
+            AlertType.PERCENTAGE_FALL -> "📉 Significant Drop!"
+            AlertType.VOLUME -> "📊 Volume Alert!"
+            else -> "🔔 Market Alert"
+        }
+    }
+
+    private fun getNotificationMessage(condition: AlertCondition, stockData: StockData): String {
+        return when (condition.type) {
+            AlertType.PRICE_ABOVE -> "${condition.stockSymbol} has risen above ${condition.value}"
+            AlertType.PRICE_BELOW -> "${condition.stockSymbol} has dropped to ${condition.value}"
+            AlertType.PERCENTAGE_RISE -> "${condition.stockSymbol} has risen ${condition.value}"
+            AlertType.PERCENTAGE_FALL -> "${condition.stockSymbol} has fallen ${condition.value}"
+            AlertType.VOLUME -> "${condition.stockSymbol} volume ${condition.name.lowercase()} ${condition.value}"
+            else -> "${condition.name} condition met for ${condition.stockSymbol}"
+        }
     }
 
     private fun updateConditionSwitch(condition: AlertCondition) {
