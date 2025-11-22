@@ -3,7 +3,7 @@ import datetime
 import uuid
 from contextlib import asynccontextmanager
 
-from sqlmodel import select
+from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -44,10 +44,22 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
+
 def generate_token() -> str:
     """Generate a random token"""
     token = uuid.uuid4()
     return str(token)
+
+
+@app.get("/api/symbols", response_model=List[str])
+async def get_all_symbols():
+    """
+    Get just the list of unique stock symbols.
+    """
+    with get_db_session() as db:
+        stmt = select(distinct(StockPrice.symbol)).order_by(StockPrice.symbol)
+        symbols = db.exec(stmt).all()
+        return symbols
 
 @app.post("/api/generate-token", response_model=TokenResponse)
 def generate_token_endpoint():
