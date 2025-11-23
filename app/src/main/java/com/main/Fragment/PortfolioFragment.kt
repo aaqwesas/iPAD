@@ -13,12 +13,14 @@ import com.github.mikephil.charting.charts.CandleStickChart
 import com.github.mikephil.charting.data.CandleData
 import com.github.mikephil.charting.data.CandleDataSet
 import com.github.mikephil.charting.data.CandleEntry
+import com.main.Data.Stock
 import com.main.models.OHLC
 import com.main.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.graphics.Paint
 
 class PortfolioFragment : Fragment() {
 
@@ -67,7 +69,8 @@ class PortfolioFragment : Fragment() {
 
         candleStickChart = view.findViewById(R.id.candle_stick_chart)
         setupCandleChart()
-        loadMockTeslaData()
+//        loadMockTeslaData()
+        loadStockHistoryChart()
 
         return view
     }
@@ -150,7 +153,93 @@ class PortfolioFragment : Fragment() {
         }
     }
 
+    private fun loadStockHistoryChart() {
+        // Show loading state (optional)
+        candleStickChart.data = null
+        candleStickChart.invalidate()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.getStockHistory(ticker)
+                if (response.isSuccessful) {
+                    val historyList = response.body() ?: emptyList()
+
+                    if (historyList.isEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            candleStickChart.data = null
+                            candleStickChart.invalidate()
+                        }
+                        return@launch
+                    }
+
+                    // Sort by timestamp just in case
+                    val sortedHistory = historyList.sortedBy { it.timestamp }
+
+                    val entries = ArrayList<CandleEntry>()
+
+                    sortedHistory.forEachIndexed { index, ohlc ->
+                        entries.add(
+                            CandleEntry(
+                                index.toFloat(),                    // x = index
+                                ohlc.high_price.toFloat(),          // high
+                                ohlc.low_price.toFloat(),           // low
+                                ohlc.open_price.toFloat(),          // open
+                                ohlc.close_price.toFloat()          // close
+                            )
+                        )
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        val dataSet = CandleDataSet(entries, ticker).apply {
+                            increasingColor = Color.rgb(0, 200, 83)   // Green
+                            increasingPaintStyle = android.graphics.Paint.Style.FILL
+                            decreasingColor = Color.rgb(255, 82, 82)  // Red
+                            decreasingPaintStyle = android.graphics.Paint.Style.FILL
+
+                            shadowColor = Color.DKGRAY
+                            shadowWidth = 1.5f
+                            setDrawValues(false)
+                            barSpace = 0.35f
+                            axisDependency = com.github.mikephil.charting.components.YAxis.AxisDependency.LEFT
+                        }
+
+                        candleStickChart.data = CandleData(dataSet)
+                        candleStickChart.invalidate()
+
+                        // Optional: Auto zoom to fit
+                        candleStickChart.fitScreen()
+                        candleStickChart.moveViewToX(entries.size.toFloat())
+                    }
+                } else {
+                    Log.e("CHART", "Failed to load history for $ticker: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("CHART", "Error loading chart data", e)
+            }
+        }
+    }
     private fun loadMockTeslaData() {
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val response = RetrofitClient.apiService.getStockHistory(ticker)
+
+            if (response.isSuccessful && response.body() != null) {
+                val stock = response.body()!!
+
+                Log.d("STOCK", "Success $ticker → $stock")
+
+                withContext(Dispatchers.Main) {
+                    // 100% safe – view exists
+
+                    val apiStock_history = response.body() ?: emptyList()
+                    // converts to entries
+                }
+            } else {
+                Log.e("STOCK", "Failed to load $ticker – ${response.code()}")
+            }
+        }
+
+
         // Realistic 1-month TSLA daily candles (Open, High, Low, Close)
         val entries = ArrayList<CandleEntry>()
 

@@ -6,6 +6,7 @@ import com.main.models.TokenResponse
 import com.main.models.TokenVerifyRequest
 import com.main.models.Stock
 import com.main.models.OHLC
+import com.main.models.OHLC_history
 import com.main.models.VerifyTokenResponse
 
 interface StockApiService {
@@ -25,7 +26,7 @@ interface StockApiService {
 //    suspend fun insertStock(@Body stock: Stock): Response<>
 
     @GET("api/stocks/history/{symbol}")
-    suspend fun getStockHistory(@Path("symbol") symbol: String): Response<List<Stock>>
+    suspend fun getStockHistory(@Path("symbol") symbol: String): Response<List<OHLC_history>>
 
     @GET("api/health")
     suspend fun checkhealth(): Response<Map<String, String>>
