@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from response_type import TokenResponse, TokenVerify, Stock, StockCreate, StockHistorical
 from database import get_db_session, create_tables
-from models import User, StockPrice, StockHistoricalData
+from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly
 from utils import create_data_fetcher, setup_database
 
 
@@ -18,7 +18,7 @@ create_tables()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    TICKERS = ["AAPL", "TSLA", "^GSPC", "0700.HK"]
+    TICKERS = ["AAPL", "TSLA", "VOO", "3115.HK"]
     
 
     data_fetcher = create_data_fetcher(tickers=TICKERS)
@@ -108,6 +108,20 @@ def get_stock_history(symbol: str):
         if not stocks:
             raise HTTPException(status_code=404, detail="Stock not found")
         return [StockHistorical.model_validate(stock) for stock in stocks]
+    
+@app.get("/api/stocks/history/weekly/{symbol}", response_model=List[StockHistorical])
+def get_stock_history(symbol: str):
+    """Get historical weekly stock data for a specific symbol"""
+    with get_db_session() as db:
+        statement = (
+            select(StockHistoricalData_weekly)
+            .where(StockHistoricalData_weekly.symbol == symbol.upper())
+            .order_by(StockHistoricalData_weekly.date.desc())
+        )
+        stocks = db.exec(statement).all()
+        if not stocks:
+            raise HTTPException(status_code=404, detail="Stock not found")
+        return [StockHistoricalData_weekly.model_validate(stock) for stock in stocks]
 
 @app.get("/api/stocks/{symbol}", response_model=Stock)
 def get_stock(symbol: str):

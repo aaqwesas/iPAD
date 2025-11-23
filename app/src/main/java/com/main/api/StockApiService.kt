@@ -28,6 +28,9 @@ interface StockApiService {
     @GET("api/stocks/history/{symbol}")
     suspend fun getStockHistory(@Path("symbol") symbol: String): Response<List<OHLC_history>>
 
+    @GET("api/stocks/history/weekly/{symbol}")
+    suspend fun getStockHistoryWeekly(@Path("symbol") symbol: String): Response<List<OHLC_history>>
+
     @GET("api/health")
     suspend fun checkhealth(): Response<Map<String, String>>
 

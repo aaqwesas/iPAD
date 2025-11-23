@@ -2,7 +2,7 @@
 import asyncio
 from sqlmodel import Session, select
 from database import get_db_session
-from models import User, StockPrice, StockHistoricalData
+from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly
 import datetime
 
 import yfinance as yf
@@ -28,12 +28,39 @@ def clear_stock_history() -> None:
     print("Cleared existing stock historical data")
 
 def setup_default_stock_data() -> None:
-    tickers = ['0700.HK', 'TSLA', '^HSI', '^GSPC']
+    tickers = ["AAPL", "TSLA", "VOO", "3115.HK"]
     with get_db_session() as db:
         for ticker in tickers:
             data = fetch_1y_stock_data(ticker)
             process_1y_data(ticker, data, db)
+
+            data_weekly = fetch_1y_stock_data_weekly(ticker)
+            process_1y_data_weekly(ticker, data_weekly, db)
+
+            # data_last_trading_day = fetch_stock_data_last(ticker)
+            # process_last(ticker, data_last_trading_day, db)
+
     print("Default stock historical data added")
+
+def fetch_1y_stock_data_weekly(ticker: str) -> pd.DataFrame:
+    data: pd.DataFrame = yf.download(
+        tickers=ticker,
+        period="1y",
+        interval="1wk",
+        auto_adjust=True,
+        multi_level_index=False
+    ) # type: ignore
+    return data
+
+# def fetch_stock_data_last(ticker: str) -> pd.DataFrame:
+#     data: pd.DataFrame = yf.download(
+#         tickers=ticker,
+#         period="1y",
+#         interval="1d",
+#         auto_adjust=True,
+#         multi_level_index=False
+#     ) # type: ignore
+#     return data
 
 def fetch_1y_stock_data(ticker: str) -> pd.DataFrame:
     data: pd.DataFrame = yf.download(
@@ -48,6 +75,19 @@ def fetch_1y_stock_data(ticker: str) -> pd.DataFrame:
 def process_1y_data(ticker: str, data: pd.DataFrame, db: Session) -> None:
     for index, row in data.iterrows():
         stock_record = StockHistoricalData(
+            symbol=ticker,
+            date=index.to_pydatetime(),
+            open_price=round(float(row['Open']), 2),
+            high_price=round(float(row['High']), 2),
+            low_price=round(float(row['Low']), 2),
+            close_price=round(float(row['Close']), 2),
+            volume=int(row['Volume']) if pd.notna(row['Volume']) else 0
+        )
+        db.add(stock_record)
+
+def process_1y_data_weekly(ticker: str, data: pd.DataFrame, db: Session) -> None:
+    for index, row in data.iterrows():
+        stock_record = StockHistoricalData_weekly(
             symbol=ticker,
             date=index.to_pydatetime(),
             open_price=round(float(row['Open']), 2),
@@ -139,7 +179,7 @@ def create_data_fetcher(tickers: list[str]):
     
 def insert_stock_data():
     """Download and insert latest stock data as new records"""
-    tickers = ['0700.HK', 'TSLA', '^HSI', '^GSPC']
+    tickers = ["AAPL", "TSLA", "VOO", "3115.HK"]
     
     with get_db_session() as db:
         for ticker in tickers:

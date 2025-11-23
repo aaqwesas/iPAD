@@ -160,7 +160,7 @@ class PortfolioFragment : Fragment() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitClient.apiService.getStockHistory(ticker)
+                val response = RetrofitClient.apiService.getStockHistoryWeekly(ticker)
                 if (response.isSuccessful) {
                     val historyList = response.body() ?: emptyList()
 
