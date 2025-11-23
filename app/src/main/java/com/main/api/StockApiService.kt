@@ -5,6 +5,7 @@ import retrofit2.http.*
 import com.main.models.TokenResponse
 import com.main.models.TokenVerifyRequest
 import com.main.models.Stock
+import com.main.models.OHLC
 import com.main.models.VerifyTokenResponse
 
 interface StockApiService {
@@ -18,7 +19,7 @@ interface StockApiService {
     suspend fun getStocks(): Response<List<Stock>>
 
     @GET("api/stocks/{symbol}")
-    suspend fun getStock(@Path("symbol") symbol: String): Response<Stock>
+    suspend fun getStock(@Path("symbol") symbol: String): Response<OHLC>
 
 //    @POST("api/stocks")
 //    suspend fun insertStock(@Body stock: Stock): Response<>

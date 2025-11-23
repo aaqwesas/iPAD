@@ -2,22 +2,60 @@ package com.main.Fragment
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
 import com.github.mikephil.charting.charts.CandleStickChart
 import com.github.mikephil.charting.data.CandleData
 import com.github.mikephil.charting.data.CandleDataSet
 import com.github.mikephil.charting.data.CandleEntry
+import com.main.models.OHLC
+import com.main.api.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PortfolioFragment : Fragment() {
 
+    companion object {
+        fun newInstance(ticker: String, companyName: String? = null): PortfolioFragment {
+            return PortfolioFragment().apply {
+                arguments = Bundle().apply {
+                    putString("ticker", ticker)
+                    putString("company_name", companyName ?: ticker)
+                }
+            }
+        }
+    }
+
+
+    // Arguments
+    private var ticker: String = "AAPL"
+    private var companyName: String = "Apple Inc."
+
+    // All your TextViews
+    private lateinit var tvCompanyName: TextView
+    private lateinit var tvTicker: TextView
+    private lateinit var tvChangePercent: TextView
+    private lateinit var tvPrevClose: TextView
+    private lateinit var tvDayHigh: TextView
+    private lateinit var tvDayLow: TextView
+    private lateinit var tvVolume: TextView
+
+
     private lateinit var candleStickChart: CandleStickChart
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ticker = arguments?.getString("ticker").toString()  // ← Survives rotation!
+        companyName = arguments?.getString("company_name") ?: ticker
     }
 
     override fun onCreateView(
@@ -32,6 +70,47 @@ class PortfolioFragment : Fragment() {
         loadMockTeslaData()
 
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // find all views to update
+        tvCompanyName = view.findViewById(R.id.stock_name)
+        tvTicker = view.findViewById(R.id.ticket)
+        tvChangePercent = view.findViewById(R.id.percentage_change)
+        tvPrevClose = view.findViewById(R.id.previous_close_value)
+        tvDayHigh = view.findViewById(R.id.day_high)
+        tvDayLow = view.findViewById(R.id.day_low)
+        tvVolume = view.findViewById(R.id.volume)
+
+        tvCompanyName.text = companyName
+        tvTicker.text = ticker
+
+        // Start loading ONLY when the view is ready
+        CoroutineScope(Dispatchers.IO).launch {
+            val response = RetrofitClient.apiService.getStock(ticker)
+
+            if (response.isSuccessful && response.body() != null) {
+                val stock = response.body()!!
+
+                Log.d("STOCK", "Success $ticker → $stock")
+
+                withContext(Dispatchers.Main) {
+                    // 100% safe – view exists
+
+                    tvChangePercent.text = stock.change_percent.toString()
+                    tvPrevClose.text = stock.close_price.toString()
+                    tvDayHigh.text = stock.high_price.toString()
+                    tvDayLow.text = stock.low_price.toString()
+                    tvVolume.text = stock.volume.toString()
+
+//                    updateStockLatest(stock)
+                }
+            } else {
+                Log.e("STOCK", "Failed to load $ticker – ${response.code()}")
+            }
+        }
     }
 
     private fun setupCandleChart() {

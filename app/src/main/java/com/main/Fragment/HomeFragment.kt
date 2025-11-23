@@ -23,6 +23,11 @@ class HomeFragment : Fragment() {
     private lateinit var adapter: StockAdapter
     private lateinit var progressBar: ProgressBar
 
+    private data class StockClickItem(
+        val ticker: String,
+        val name: String
+    )
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -33,15 +38,30 @@ class HomeFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recycler_view_stocks)
         progressBar = view.findViewById(R.id.progress_bar)
 
-        setupRecyclerView()
+//        setupRecyclerView()
         loadStockData()
 
         return view
     }
 
-    private fun setupRecyclerView() {
+    private fun setupRecyclerView(tickerToNameMap: Map<String, String>) {
         adapter = StockAdapter { stock ->
-            // Handle stock item click
+            val companyName = tickerToNameMap[stock.ticker] ?: stock.ticker
+
+            // Pass BOTH ticker and name!
+            val detailFragment = PortfolioFragment.newInstance(stock.ticker, companyName)
+
+            parentFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.slide_in_right,
+                    R.anim.slide_out_left,
+                    R.anim.slide_in_left,
+                    R.anim.slide_out_right
+                )
+                .replace(R.id.fragment_container, detailFragment)
+                .addToBackStack("portfolio_detail")
+                .commit()
+
         }
 
         recyclerView.apply {
@@ -56,7 +76,10 @@ class HomeFragment : Fragment() {
         CoroutineScope(Dispatchers.IO).launch {
             val response = RetrofitClient.apiService.getStocks()
             if (response.isSuccessful) {
-                val stocks = response.body()?.map { apiStock ->
+
+                val apiStocks = response.body() ?: emptyList()
+
+                val stocks = apiStocks.map { apiStock ->
                     Stock(
                         ticker = apiStock.symbol,
                         price = apiStock.price,
@@ -64,9 +87,13 @@ class HomeFragment : Fragment() {
                         changePercent = apiStock.change_percent,
                         volume = apiStock.volume
                     )
-                } ?: emptyList()
+                }
+
+                // Create mapping: ticker → name
+                val tickerToNameMap = apiStocks.associate { it.symbol to it.name }
 
                 withContext(Dispatchers.Main) {
+                    setupRecyclerView(tickerToNameMap)
                     adapter.updateStocks(stocks)
                     progressBar.visibility = View.GONE
                 }

@@ -23,3 +23,16 @@ data class Stock(
     val volume: Int,
     val timestamp: String
 )
+
+data class OHLC(
+    val symbol: String,
+    val price: Double,
+    val change: Double,
+    val change_percent: Double,
+    val volume: Int,
+    val timestamp: String,
+    val open_price: Double,
+    val high_price: Double,
+    val low_price: Double,
+    val close_price: Double
+)
