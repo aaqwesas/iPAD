@@ -39,13 +39,20 @@
         android:gravity="center_horizontal"
         android:padding="16dp">
 
-        <!-- Candle chart placeholder -->
-        <FrameLayout
-            android:id="@+id/candle_chart_container"
+<!--        &lt;!&ndash; Candle chart placeholder &ndash;&gt;-->
+<!--        <FrameLayout-->
+<!--            android:id="@+id/candle_chart_container"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="250dp"-->
+<!--            android:background="@drawable/chart_placeholder_bg"-->
+<!--            android:layout_marginBottom="12dp" />-->
+
+        <com.github.mikephil.charting.charts.CandleStickChart
+            android:id="@+id/candle_stick_chart"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
-            android:background="@drawable/chart_placeholder_bg"
-            android:layout_marginBottom="12dp" />
+            android:layout_height="319dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp" />
 
         <!-- Time scale buttons -->
         <LinearLayout
