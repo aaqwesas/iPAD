@@ -21,6 +21,10 @@ import com.main.Fragment.HomeFragment
 import com.main.Fragment.PortfolioFragment
 import com.main.Fragment.ProfileFragment
 
+import com.google.firebase.messaging.FirebaseMessaging
+import android.util.Log
+import android.widget.Toast
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -60,6 +64,15 @@ class MainActivity : AppCompatActivity() {
                 bottomNavigationView.selectedItemId = R.id.nav_home
             }
             setupBottomNavigation()
+        }
+
+        // In MainActivity.kt — keep ONLY this for testing
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d("FCM_TOKEN", "Your FCM token: $token")
+                Toast.makeText(this, "FCM ready (check Logcat)", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

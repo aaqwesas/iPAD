@@ -12,6 +12,26 @@ from database import get_db_session, create_tables
 from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly
 from utils import create_data_fetcher, setup_database
 
+import firebase_admin
+from firebase_admin import credentials, messaging
+
+# Initialize Firebase Admin SDK (only once)
+if not firebase_admin._apps:
+    cred = credentials.Certificate("firebase-adminsdk.json")
+    firebase_admin.initialize_app(cred)
+
+def send_fcm_notification(token: str, title: str, body: str):
+    message = messaging.Message(
+        notification=messaging.Notification(title=title, body=body),
+        token=token,
+    )
+    try:
+        response = messaging.send(message)
+        print("Push sent successfully:", response)
+    except Exception as e:
+        print("Failed to send push:", e)
+
+
 
 # Create tables
 create_tables()
@@ -42,6 +62,18 @@ def create_app() -> FastAPI:
     return app
 
 app = create_app()
+
+@app.get("/test-push")
+async def test_push():
+    # ←←← REPLACE THIS WITH A REAL TOKEN FROM YOUR PHONE LOGS ←←←
+    test_token = "dp9Xoj_5RH29NBdELTJoTj:APA91bGSVH_hRb3t2OSNeXXk__KxNJoauX3xpAv3EJOYkvl8V3KmC8x_yprjEgigE0VDDIZCejme0ef1wcVjMEWT5QVKbzFesHw1n3jO5KQvY3hnK8aOBZE"
+    
+    send_fcm_notification(
+        token=test_token,
+        title="IT WORKS!",
+        body="Your price alert system is 100% ready!"
+    )
+    return {"status": "sent"}
 
 
 def generate_token() -> str:

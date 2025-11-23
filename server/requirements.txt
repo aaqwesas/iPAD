@@ -8,3 +8,4 @@ bcrypt
 python-jose[cryptography]
 pydantic_settings
 yfinance
+firebase-admin
