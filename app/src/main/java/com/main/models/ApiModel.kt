@@ -39,7 +39,7 @@ data class OHLC(
 
 data class OHLC_history(
     val symbol: String,
-    val timestamp: String,
+    val date: String,
     val open_price: Double,
     val high_price: Double,
     val low_price: Double,

@@ -72,6 +72,14 @@
                 android:text="1 year" />
 
             <Button
+                android:id="@+id/last_6_months"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="33dp"
+                android:layout_weight="1"
+                android:text="6 months" />
+
+            <Button
                 android:id="@+id/last_month"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
@@ -80,20 +88,12 @@
                 android:text="1 month" />
 
             <Button
-                android:id="@+id/last_week"
+                android:id="@+id/last_2_weeks"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="1 week" />
-
-            <Button
-                android:id="@+id/last_24_hours"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="24 hours" />
+                android:text="2 weeks" />
 
         </LinearLayout>
 

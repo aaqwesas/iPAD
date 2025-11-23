@@ -15,12 +15,14 @@ import com.github.mikephil.charting.data.CandleDataSet
 import com.github.mikephil.charting.data.CandleEntry
 import com.main.Data.Stock
 import com.main.models.OHLC
+import com.main.models.OHLC_history
 import com.main.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.compose.ui.graphics.Paint
+import android.graphics.Paint
+import android.widget.Button
 
 class PortfolioFragment : Fragment() {
 
@@ -35,6 +37,9 @@ class PortfolioFragment : Fragment() {
         }
     }
 
+
+    private var weeklyHistoryCache: List<OHLC_history>? = null
+    private var dailyHistoryCache: List<OHLC_history>? = null
 
     // Arguments
     private var ticker: String = "AAPL"
@@ -51,6 +56,13 @@ class PortfolioFragment : Fragment() {
 
 
     private lateinit var candleStickChart: CandleStickChart
+
+    private lateinit var btn1Year: Button
+    private lateinit var btn6Months: Button
+    private lateinit var btn1Month: Button
+    private lateinit var btn2Weeks: Button
+
+    private var currentTimeframe = "1Y"  // default
 
 
 
@@ -70,7 +82,7 @@ class PortfolioFragment : Fragment() {
         candleStickChart = view.findViewById(R.id.candle_stick_chart)
         setupCandleChart()
 //        loadMockTeslaData()
-        loadStockHistoryChart()
+//        loadStockHistoryChart()
 
         return view
     }
@@ -86,6 +98,20 @@ class PortfolioFragment : Fragment() {
         tvDayHigh = view.findViewById(R.id.day_high)
         tvDayLow = view.findViewById(R.id.day_low)
         tvVolume = view.findViewById(R.id.volume)
+
+        btn1Year = view.findViewById(R.id.last_year)
+        btn6Months = view.findViewById(R.id.last_6_months)
+        btn1Month = view.findViewById(R.id.last_month)
+        btn2Weeks = view.findViewById(R.id.last_2_weeks)
+
+// Set click listeners
+        btn1Year.setOnClickListener { switchTimeframe("1Y") }
+        btn6Months.setOnClickListener { switchTimeframe("6M") }
+        btn1Month.setOnClickListener { switchTimeframe("1M") }
+        btn2Weeks.setOnClickListener { switchTimeframe("2W") }
+
+// Load default (1Y) on start
+        switchTimeframe("1Y")
 
         tvCompanyName.text = companyName
         tvTicker.text = ticker
@@ -116,6 +142,134 @@ class PortfolioFragment : Fragment() {
         }
     }
 
+
+    private fun switchTimeframe(timeframe: String) {
+        if (currentTimeframe == timeframe) return
+        currentTimeframe = timeframe
+
+        // Update button highlights
+        val selectedColor = Color.parseColor("#6200EE")  // Purple
+        val normalColor = Color.parseColor("#666666")
+        val selectedBg = android.R.drawable.btn_default_small
+        val normalBg = android.R.drawable.btn_default_small
+
+        listOf(btn1Year, btn6Months, btn1Month, btn2Weeks).forEach { it.setBackgroundResource(normalBg) }
+        listOf(btn1Year, btn6Months, btn1Month, btn2Weeks).forEach { it.setTextColor(normalColor) }
+
+        when (timeframe) {
+            "1Y" -> { btn1Year.setBackgroundColor(selectedColor); btn1Year.setTextColor(Color.WHITE) }
+            "6M" -> { btn6Months.setBackgroundColor(selectedColor); btn6Months.setTextColor(Color.WHITE) }
+            "1M" -> { btn1Month.setBackgroundColor(selectedColor); btn1Month.setTextColor(Color.WHITE) }
+            "2W" -> { btn2Weeks.setBackgroundColor(selectedColor); btn2Weeks.setTextColor(Color.WHITE) }
+        }
+
+        loadChartData(timeframe)
+    }
+
+    private fun loadChartData(timeframe: String) {
+
+        candleStickChart.data = null
+        candleStickChart.invalidate()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val isWeekly = timeframe == "1Y" || timeframe == "6M"
+                val cache = if (isWeekly) weeklyHistoryCache else dailyHistoryCache
+
+                // Load from cache if we have it
+                if (cache != null) {
+                    val filtered = filterHistoryByTimeframe(cache, timeframe)
+                    withContext(Dispatchers.Main) { updateChartWithData(filtered) }
+                    return@launch
+                }
+
+                // Otherwise: fetch once
+                val response = if (isWeekly) {
+                    RetrofitClient.apiService.getStockHistoryWeekly(ticker)
+                } else {
+                    RetrofitClient.apiService.getStockHistory(ticker)
+                }
+
+                if (response.isSuccessful && response.body() != null) {
+                    val fullHistory = response.body()!!
+
+                    // Cache full data
+                    if (isWeekly) weeklyHistoryCache = fullHistory
+                    else dailyHistoryCache = fullHistory
+
+                    val filtered = filterHistoryByTimeframe(fullHistory, timeframe)
+
+                    withContext(Dispatchers.Main) {
+                        updateChartWithData(filtered)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("CHART", "Failed to load $timeframe data", e)
+            }
+        }
+    }
+
+    private fun filterHistoryByTimeframe(
+        history: List<OHLC_history>,
+        timeframe: String
+    ): List<OHLC_history> {
+        if (history.isEmpty()) return emptyList()
+
+        val now = System.currentTimeMillis()
+        val cutoffTime = when (timeframe) {
+            "1Y" -> now - 365L * 24 * 60 * 60 * 1000
+            "6M" -> now - 180L * 24 * 60 * 60 * 1000
+            "1M" -> now - 30L * 24 * 60 * 60 * 1000
+            "2W" -> now - 14L * 24 * 60 * 60 * 1000
+            else -> now
+        }
+
+        return history
+            .filter { ohlc ->
+                try {
+                    // Parse ISO date string like "2025-11-17T00:00:00"
+                    val date = java.time.LocalDate.parse(ohlc.date.substring(0, 10)) // "2025-11-17"
+                    val timestampMs = date.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    timestampMs >= cutoffTime
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            .sortedBy { it.date }  // oldest first
+    }
+
+    private fun updateChartWithData(history: List<OHLC_history>) {
+        if (history.isEmpty()) {
+            candleStickChart.data = null
+            candleStickChart.invalidate()
+            return
+        }
+
+        val entries = history.mapIndexed { index, ohlc ->
+            CandleEntry(
+                index.toFloat(),
+                ohlc.high_price.toFloat(),
+                ohlc.low_price.toFloat(),
+                ohlc.open_price.toFloat(),
+                ohlc.close_price.toFloat()
+            )
+        }
+
+        val dataSet = CandleDataSet(entries, ticker).apply {
+            increasingColor = Color.rgb(0, 200, 83)
+            increasingPaintStyle = Paint.Style.FILL
+            decreasingColor = Color.rgb(255, 82, 82)
+            decreasingPaintStyle = Paint.Style.FILL
+            shadowColor = Color.DKGRAY
+            shadowWidth = 1.5f
+            setDrawValues(false)
+            barSpace = 0.35f
+        }
+
+        candleStickChart.data = CandleData(dataSet)
+        candleStickChart.invalidate()
+        candleStickChart.fitScreen()
+    }
     private fun setupCandleChart() {
         candleStickChart.apply {
             description.isEnabled = false
@@ -153,131 +307,4 @@ class PortfolioFragment : Fragment() {
         }
     }
 
-    private fun loadStockHistoryChart() {
-        // Show loading state (optional)
-        candleStickChart.data = null
-        candleStickChart.invalidate()
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitClient.apiService.getStockHistoryWeekly(ticker)
-                if (response.isSuccessful) {
-                    val historyList = response.body() ?: emptyList()
-
-                    if (historyList.isEmpty()) {
-                        withContext(Dispatchers.Main) {
-                            candleStickChart.data = null
-                            candleStickChart.invalidate()
-                        }
-                        return@launch
-                    }
-
-                    // Sort by timestamp just in case
-                    val sortedHistory = historyList.sortedBy { it.timestamp }
-
-                    val entries = ArrayList<CandleEntry>()
-
-                    sortedHistory.forEachIndexed { index, ohlc ->
-                        entries.add(
-                            CandleEntry(
-                                index.toFloat(),                    // x = index
-                                ohlc.high_price.toFloat(),          // high
-                                ohlc.low_price.toFloat(),           // low
-                                ohlc.open_price.toFloat(),          // open
-                                ohlc.close_price.toFloat()          // close
-                            )
-                        )
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        val dataSet = CandleDataSet(entries, ticker).apply {
-                            increasingColor = Color.rgb(0, 200, 83)   // Green
-                            increasingPaintStyle = android.graphics.Paint.Style.FILL
-                            decreasingColor = Color.rgb(255, 82, 82)  // Red
-                            decreasingPaintStyle = android.graphics.Paint.Style.FILL
-
-                            shadowColor = Color.DKGRAY
-                            shadowWidth = 1.5f
-                            setDrawValues(false)
-                            barSpace = 0.35f
-                            axisDependency = com.github.mikephil.charting.components.YAxis.AxisDependency.LEFT
-                        }
-
-                        candleStickChart.data = CandleData(dataSet)
-                        candleStickChart.invalidate()
-
-                        // Optional: Auto zoom to fit
-                        candleStickChart.fitScreen()
-                        candleStickChart.moveViewToX(entries.size.toFloat())
-                    }
-                } else {
-                    Log.e("CHART", "Failed to load history for $ticker: ${response.code()}")
-                }
-            } catch (e: Exception) {
-                Log.e("CHART", "Error loading chart data", e)
-            }
-        }
-    }
-    private fun loadMockTeslaData() {
-
-        CoroutineScope(Dispatchers.IO).launch {
-            val response = RetrofitClient.apiService.getStockHistory(ticker)
-
-            if (response.isSuccessful && response.body() != null) {
-                val stock = response.body()!!
-
-                Log.d("STOCK", "Success $ticker → $stock")
-
-                withContext(Dispatchers.Main) {
-                    // 100% safe – view exists
-
-                    val apiStock_history = response.body() ?: emptyList()
-                    // converts to entries
-                }
-            } else {
-                Log.e("STOCK", "Failed to load $ticker – ${response.code()}")
-            }
-        }
-
-
-        // Realistic 1-month TSLA daily candles (Open, High, Low, Close)
-        val entries = ArrayList<CandleEntry>()
-
-        // Index = day, values = OHLC in USD
-        entries.add(CandleEntry(0f, 418.32f, 402.15f, 410.50f, 415.20f))  // Day 1
-        entries.add(CandleEntry(1f, 425.10f, 408.70f, 413.20f, 422.80f))
-        entries.add(CandleEntry(2f, 435.50f, 420.10f, 423.00f, 432.60f))
-        entries.add(CandleEntry(3f, 440.00f, 425.30f, 438.00f, 428.90f))  // Red day
-        entries.add(CandleEntry(4f, 438.20f, 420.50f, 427.00f, 435.10f))
-        entries.add(CandleEntry(5f, 448.90f, 430.20f, 433.00f, 446.50f))
-        entries.add(CandleEntry(6f, 455.00f, 440.10f, 447.80f, 452.30f))
-        entries.add(CandleEntry(7f, 460.50f, 448.00f, 451.00f, 458.70f))
-        entries.add(CandleEntry(8f, 465.20f, 450.30f, 459.00f, 453.10f))  // Red
-        entries.add(CandleEntry(9f, 462.80f, 448.90f, 452.00f, 460.50f))
-        entries.add(CandleEntry(10f, 475.00f, 458.20f, 460.00f, 472.30f))
-        entries.add(CandleEntry(11f, 480.50f, 465.10f, 473.00f, 478.90f))
-        entries.add(CandleEntry(12f, 485.00f, 470.50f, 479.00f, 475.20f)) // Red
-        entries.add(CandleEntry(13f, 482.10f, 468.00f, 474.00f, 480.80f))
-        entries.add(CandleEntry(14f, 490.00f, 475.50f, 479.50f, 488.40f))
-
-        val dataSet = CandleDataSet(entries, "TSLA").apply {
-            // Bullish (green) / Bearish (red) colors
-            increasingColor = Color.rgb(0, 200, 83)   // Green
-            increasingPaintStyle = android.graphics.Paint.Style.FILL
-            decreasingColor = Color.rgb(255, 82, 82)  // Red
-            decreasingPaintStyle = android.graphics.Paint.Style.FILL
-
-            shadowColor = Color.DKGRAY
-            shadowWidth = 1f
-
-            // Remove value labels on top of candles
-            setDrawValues(false)
-
-            // Optional: make candles thicker
-            barSpace = 0.3f
-        }
-
-        candleStickChart.data = CandleData(dataSet)
-        candleStickChart.invalidate() // Refresh
-    }
 }
