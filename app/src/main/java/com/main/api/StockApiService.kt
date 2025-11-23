@@ -29,4 +29,7 @@ interface StockApiService {
     @GET("api/health")
     suspend fun checkhealth(): Response<Map<String, String>>
 
+    @GET("api/symbols")
+    suspend fun  getSymbols(): Response<List<String>>
+
 }

@@ -131,7 +131,7 @@ async def fetch_and_store_stock_data(tickers: list[str]):
 
             # Sleep for remainder of interval
             elapsed = asyncio.get_running_loop().time() - start
-            sleep_time = max(0, 60 - elapsed)
+            sleep_time = max(0, 70 - elapsed)
             await asyncio.sleep(sleep_time)
 
 def create_data_fetcher(tickers: list[str]):
