@@ -4,7 +4,7 @@ from datetime import datetime
 
 class User(SQLModel, table=True):
     __tablename__: str = "users"
-
+    token: str = Field(unique=True, index=True)
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     fcm_token: Optional[str] = None
