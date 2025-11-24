@@ -1,6 +1,9 @@
 package com.main.Fragment
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +29,7 @@ class HomeFragment : Fragment() {
     private lateinit var txtPortfolioValue: TextView
     private lateinit var txtDailyPL: TextView
     private lateinit var portfolioBox: View
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,19 +44,52 @@ class HomeFragment : Fragment() {
         txtDailyPL = view.findViewById(R.id.txt_daily_pl)
         portfolioBox = view.findViewById(R.id.portfolio_box)
 
+        // Initialize SharedPreferences
+        sharedPreferences = requireContext().getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
+
         setupPortfolioBox()
         loadStockData()
+        loadPortfolioData() // Load actual portfolio data
 
         return view
     }
 
     private fun setupPortfolioBox() {
-        // Set initial portfolio data - percentage only
+        // Set initial portfolio data - will be updated when real data loads
         updatePortfolioData("0.00%", "Today")
 
         // Set click listener for portfolio box
         portfolioBox.setOnClickListener {
             showPortfolioDialog()
+        }
+    }
+
+    private fun loadPortfolioData() {
+        val token = sharedPreferences.getString("user_email", null)
+
+        if (token == null) {
+            // User not logged in, keep default values
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val portfolioResponse = RetrofitClient.apiService.getPortfolioValue(token)
+
+                withContext(Dispatchers.Main) {
+                    if (portfolioResponse.isSuccessful) {
+                        val portfolioValue = portfolioResponse.body()?.value ?: 0.0f
+                        // Format as percentage (you might want to calculate actual percentage change)
+                        updatePortfolioData("${String.format("%.2f", portfolioValue)}%", "Today")
+                    } else {
+                        // Keep default values if API fails
+                        updatePortfolioData("0.00%", "Today")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("HomeFragment", "Failed to load portfolio data", e)
+                // Keep default values on error
+            }
         }
     }
 

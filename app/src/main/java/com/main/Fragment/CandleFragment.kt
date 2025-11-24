@@ -1,5 +1,7 @@
 package com.main.Fragment
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -21,9 +23,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.graphics.Paint
-import java.text.DecimalFormat
+import com.main.Data.AddHoldingRequest
+import com.main.Data.PortfolioUpdate
+
 
 class CandleFragment : Fragment() {
+    private lateinit var sharedPreferences: SharedPreferences
 
     companion object {
         fun newInstance(ticker: String, companyName: String? = null): CandleFragment {
@@ -199,24 +204,88 @@ class CandleFragment : Fragment() {
 
         val total = quantity * currentPrice
 
-        if (isBuyMode) {
-            // No money check - user can buy any amount
-            Toast.makeText(requireContext(), "Bought $quantity shares of $ticker", Toast.LENGTH_LONG).show()
-        } else {
-            Toast.makeText(requireContext(), "Sold $quantity shares of $ticker", Toast.LENGTH_LONG).show()
-        }
+        // Determine the actual quantity to add (positive for buy, negative for sell)
+        val tradeQuantity = if (isBuyMode) quantity.toFloat() else -quantity.toFloat()
 
-        // Dismiss dialog
-        requireActivity().currentFocus?.let { view ->
-            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-            imm.hideSoftInputFromWindow(view.windowToken, 0)
-        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Get token and check if it's null
+                val token = sharedPreferences.getString("user_email", null)
+                if (token == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Please login to trade",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    return@launch
+                }
 
-        // In a real app, you'd want to properly dismiss the dialog and update portfolio
+                // 1. Update the user holdings
+                val holdingRequest = AddHoldingRequest(
+                    stock_ticker = ticker,
+                    quantity = tradeQuantity
+                )
+
+                val holdingResponse = RetrofitClient.apiService.addUserHolding(token, holdingRequest)
+
+                if (holdingResponse.isSuccessful) {
+                    // 2. Update portfolio value (optional - you might want to calculate this server-side)
+                    val portfolioResponse = RetrofitClient.apiService.getPortfolioValue(token)
+                    if (portfolioResponse.isSuccessful) {
+                        val currentPortfolioValue = portfolioResponse.body()?.value ?: 0.0f
+                        val newPortfolioValue = if (isBuyMode) {
+                            currentPortfolioValue + total.toFloat()
+                        } else {
+                            currentPortfolioValue - total.toFloat()
+                        }
+
+                        // Update portfolio value in database
+                        val portfolioUpdate = PortfolioUpdate(value = newPortfolioValue)
+                        RetrofitClient.apiService.updatePortfolioValue(token, portfolioUpdate)
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        val action = if (isBuyMode) "Bought" else "Sold"
+                        Toast.makeText(
+                            requireContext(),
+                            "$action $quantity shares of $ticker",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        // Dismiss dialog
+                        requireActivity().currentFocus?.let { view ->
+                            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                            imm.hideSoftInputFromWindow(view.windowToken, 0)
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Failed to execute trade",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Network error: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                Log.e("TRADE", "Failed to execute trade", e)
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
 
         // find all views to update
         tvCompanyName = view.findViewById(R.id.stock_name)
@@ -237,6 +306,7 @@ class CandleFragment : Fragment() {
         btn6Months.setOnClickListener { switchTimeframe("6M") }
         btn1Month.setOnClickListener { switchTimeframe("1M") }
         btn2Weeks.setOnClickListener { switchTimeframe("2W") }
+        sharedPreferences = requireContext().getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
 
         // Load default (1Y) on start
         loadChartData("1Y")

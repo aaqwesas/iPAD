@@ -1,5 +1,6 @@
 package com.main.api
 
+import com.main.Data.AddHoldingRequest
 import com.main.Data.PortfolioResponse
 import com.main.Data.PortfolioUpdate
 import com.main.Data.UserHoldingResponse
@@ -50,16 +51,22 @@ interface StockApiService {
     @GET("api/symbols")
     suspend fun getSymbols(): Response<List<String>>
 
-    // Portfolio endpoints
-    @GET("api/users/{user_id}/holdings")
-    suspend fun getUserHoldings(@Path("user_id") userId: Int): Response<List<UserHoldingResponse>>
+    // Portfolio endpoints - updated to use token instead of user_id
+    @GET("users/{token}/holdings")
+    suspend fun getUserHoldings(@Path("token") token: String): Response<List<UserHoldingResponse>>
 
-    @GET("api/users/{user_id}/portfolio")
-    suspend fun getPortfolioValue(@Path("user_id") userId: Int): Response<PortfolioResponse>
+    @GET("users/{token}/portfolio")
+    suspend fun getPortfolioValue(@Path("token") token: String): Response<PortfolioResponse>
 
-    @PUT("api/users/{user_id}/portfolio")
+    @PUT("users/{token}/portfolio")
     suspend fun updatePortfolioValue(
-        @Path("user_id") userId: Int,
+        @Path("token") token: String,
         @Body update: PortfolioUpdate
     ): Response<PortfolioResponse>
+
+    @POST("users/{token}/holdings")
+    suspend fun addUserHolding(
+        @Path("token") token: String,
+        @Body request: AddHoldingRequest
+    ): Response<UserHoldingResponse>
 }

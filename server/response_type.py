@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+
+
+
+
 class TokenResponse(BaseModel):
     token: str
     message: str
@@ -14,6 +18,10 @@ class PortfolioResponse(BaseModel):
     
 
 class UserHoldingResponse(BaseModel):
+    stock_ticker: str
+    quantity: float
+
+class AddHoldingRequest(BaseModel):
     stock_ticker: str
     quantity: float
 

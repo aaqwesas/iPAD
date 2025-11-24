@@ -7,7 +7,7 @@ from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from response_type import PortfolioResponse, PortfolioUpdate, RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest, UserHoldingResponse
+from response_type import AddHoldingRequest, PortfolioResponse, PortfolioUpdate, RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest, UserHoldingResponse
 from database import get_db_session, create_tables
 from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert, UserHolding, UserPortfolio
 from utils import create_data_fetcher, setup_database, send_fcm_notification
@@ -78,13 +78,14 @@ async def get_all_symbols():
         stmt = select(distinct(StockPrice.symbol)).order_by(StockPrice.symbol)
         symbols = db.exec(stmt).all()
         return symbols
+    
 
-@app.get("/users/{user_id}/portfolio", response_model=PortfolioResponse)
-async def get_portfolio_value(user_id: int):
+@app.get("/users/{token}/portfolio", response_model=PortfolioResponse)
+async def get_portfolio_value(token: str):
     with get_db_session() as db:
         portfolio = db.exec(
             select(UserPortfolio)
-            .where(UserPortfolio.user_id == user_id)
+            .where(UserPortfolio.token == token)
         ).first()
         
         if not portfolio:
@@ -94,12 +95,12 @@ async def get_portfolio_value(user_id: int):
         return PortfolioResponse(value=portfolio.value)
 
 # 2. Update portfolio value
-@app.put("/users/{user_id}/portfolio", response_model=PortfolioResponse)
-async def update_portfolio_value(user_id: int, update: PortfolioUpdate):
+@app.put("/users/{token}/portfolio", response_model=PortfolioResponse)
+async def update_portfolio_value(token: str, update: PortfolioUpdate):
     with get_db_session() as db:
         portfolio = db.exec(
             select(UserPortfolio)
-            .where(UserPortfolio.user_id == user_id)
+            .where(UserPortfolio.token == token)
         ).first()
         
         if portfolio:
@@ -107,21 +108,20 @@ async def update_portfolio_value(user_id: int, update: PortfolioUpdate):
             portfolio.value = update.value
         else:
             # Create new portfolio if doesn't exist
-            portfolio = UserPortfolio(user_id=user_id, value=update.value)
+            portfolio = UserPortfolio(token=token, value=update.value)
             db.add(portfolio)
         
         db.commit()
         db.refresh(portfolio)
         return PortfolioResponse(value=portfolio.value)
 
-
-@app.get("/users/{user_id}/holdings", response_model=List[UserHoldingResponse])
-async def get_user_holdings(user_id: int):
+@app.get("/users/{token}/holdings", response_model=List[UserHoldingResponse])
+async def get_user_holdings(token: str):
     with get_db_session() as db:
         # Query all holdings for this user
         holdings = db.exec(
             select(UserHolding.stock_ticker, UserHolding.quantity)
-            .where(UserHolding.user_id == user_id)
+            .where(UserHolding.token == token)
         ).all()
         
         if not holdings:
@@ -130,7 +130,59 @@ async def get_user_holdings(user_id: int):
         # Convert to response model
         return [UserHoldingResponse(stock_ticker=ticker, quantity=quantity) 
                 for ticker, quantity in holdings]
-
+        
+@app.post("/users/{token}/holdings", response_model=UserHoldingResponse)
+async def add_user_holding(token: str, request: AddHoldingRequest):
+    with get_db_session() as db:
+        # Try to find existing holding
+        existing_holding = db.exec(
+            select(UserHolding)
+            .where(
+                UserHolding.token == token,
+                UserHolding.stock_ticker == request.stock_ticker
+            )
+        ).first()
+        
+        if existing_holding:
+            # Update existing holding
+            existing_holding.quantity += request.quantity
+            
+            # If quantity becomes 0 or negative, remove the holding
+            if existing_holding.quantity <= 0:
+                db.delete(existing_holding)
+                db.commit()
+                return UserHoldingResponse(
+                    stock_ticker=request.stock_ticker, 
+                    quantity=0
+                )
+            else:
+                db.commit()
+                db.refresh(existing_holding)
+                return UserHoldingResponse(
+                    stock_ticker=existing_holding.stock_ticker,
+                    quantity=existing_holding.quantity
+                )
+        else:
+            # Create new holding if quantity is positive
+            if request.quantity > 0:
+                new_holding = UserHolding(
+                    token=token,
+                    stock_ticker=request.stock_ticker,
+                    quantity=request.quantity
+                )
+                db.add(new_holding)
+                db.commit()
+                db.refresh(new_holding)
+                return UserHoldingResponse(
+                    stock_ticker=new_holding.stock_ticker,
+                    quantity=new_holding.quantity
+                )
+            else:
+                # If trying to add negative quantity to non-existent holding, return 0
+                return UserHoldingResponse(
+                    stock_ticker=request.stock_ticker,
+                    quantity=0
+                )
 
 @app.post("/api/generate-token", response_model=RegisterResponse)
 def register(data: RegisterRequest):

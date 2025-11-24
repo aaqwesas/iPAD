@@ -10,18 +10,17 @@ class User(SQLModel, table=True):
     fcm_token: Optional[str] = None
 
 
-
 class UserPortfolio(SQLModel, table=True):
     __tablename__: str = "user_portfolios"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    token: str = Field(foreign_key="users.token")
     value: float
     
     
 class UserHolding(SQLModel, table=True):
     __tablename__ = "user_holdings"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
+    token: str = Field(foreign_key="users.token")
     stock_ticker: str = Field(index=True)
     quantity: float
 
