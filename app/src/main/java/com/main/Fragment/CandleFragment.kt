@@ -13,8 +13,6 @@ import com.github.mikephil.charting.charts.CandleStickChart
 import com.github.mikephil.charting.data.CandleData
 import com.github.mikephil.charting.data.CandleDataSet
 import com.github.mikephil.charting.data.CandleEntry
-import com.main.Data.Stock
-import com.main.models.OHLC
 import com.main.models.OHLC_history
 import com.main.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
@@ -24,11 +22,11 @@ import kotlinx.coroutines.withContext
 import android.graphics.Paint
 import android.widget.Button
 
-class PortfolioFragment : Fragment() {
+class CandleFragment : Fragment() {
 
     companion object {
-        fun newInstance(ticker: String, companyName: String? = null): PortfolioFragment {
-            return PortfolioFragment().apply {
+        fun newInstance(ticker: String, companyName: String? = null): CandleFragment {
+            return CandleFragment().apply {
                 arguments = Bundle().apply {
                     putString("ticker", ticker)
                     putString("company_name", companyName ?: ticker)

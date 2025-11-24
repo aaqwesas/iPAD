@@ -18,7 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.main.Fragment.AlertsFragment
 import com.main.Fragment.HomeFragment
-import com.main.Fragment.PortfolioFragment
+import com.main.Fragment.CandleFragment
 import com.main.Fragment.ProfileFragment
 
 import com.google.firebase.messaging.FirebaseMessaging
@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView.setOnItemSelectedListener { item ->
             val selectedFragment: Fragment = when (item.itemId) {
                 R.id.nav_home -> HomeFragment()
-                R.id.nav_portfolio -> PortfolioFragment()
+                R.id.nav_portfolio -> CandleFragment()
                 R.id.nav_profile -> ProfileFragment()
                 R.id.nav_alert -> AlertsFragment()
                 else -> HomeFragment() // Default to HomeFragment

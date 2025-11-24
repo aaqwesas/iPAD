@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context="com.main.Fragment.PortfolioFragment">
+    tools:context="com.main.Fragment.CandleFragment">
 
     <TextView
         android:id="@+id/stock_name"
