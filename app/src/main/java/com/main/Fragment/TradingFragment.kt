@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
 import com.example.ipad.databinding.FragmentTradingBinding
+import com.main.StockRepository
 
 class TradingFragment : Fragment() {
 
@@ -16,7 +17,7 @@ class TradingFragment : Fragment() {
     private var shares = 10
     private var limitPrice = 180.50
     private var ownedShares = 0.0
-    private val stockSymbol = "AAPL"
+    private var stockSymbol = StockRepository.stockNames.first()
 
     // Order type and duration options
     private val orderTypes = arrayOf("Market", "Limit", "Stop", "Stop Limit")
@@ -110,6 +111,7 @@ class TradingFragment : Fragment() {
         binding.tvEstimatedTotal.text = "$${"%.2f".format(estimatedTotal)}"
 
         binding.tvOwnership.text = "You own %.2f %s".format(ownedShares, stockSymbol)
+        binding.tvStockSymbol.text = stockSymbol
     }
 
     private fun updateOrderTypeDisplay() {
