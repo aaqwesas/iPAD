@@ -123,7 +123,7 @@ class CandleFragment : Fragment() {
         btn2Weeks.setOnClickListener { switchTimeframe("2W") }
 
 // Load default (1Y) on start
-        switchTimeframe("1Y")
+        loadChartData("1Y")
 
         tvCompanyName.text = companyName
         tvTicker.text = ticker
