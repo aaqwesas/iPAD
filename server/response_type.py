@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+class TokenResponse(BaseModel):
+    token: str
+    message: str
+
 class Stock(BaseModel):
     symbol: str
     price: float
@@ -35,3 +39,23 @@ class StockCreate(BaseModel):
     change_percent: float
     volume: int
     timestamp: datetime
+
+class TokenVerify(BaseModel):
+    token: str
+
+class RegisterRequest(BaseModel):
+    email: str
+
+class RegisterResponse(BaseModel):
+    message: str
+    is_new: bool
+
+class FCMUpdate(BaseModel):
+    email: str
+    fcm_token: str
+
+class CreateAlertRequest(BaseModel):
+    email: str
+    symbol: str
+    target_price: float
+    condition: str

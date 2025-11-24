@@ -11,6 +11,22 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Stock Selection Dropdown -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Stock"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/stock_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
         <!-- Alert Type Section -->
         <TextView
             android:layout_width="match_parent"
@@ -167,6 +183,15 @@
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- Save Alert Button -->
+        <Button
+            android:id="@+id/save_alert_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Save Alert"
+            android:textColor="@android:color/white" />
 
     </LinearLayout>
 </ScrollView>

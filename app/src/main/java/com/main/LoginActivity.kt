@@ -17,6 +17,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.messaging
+import com.main.api.RetrofitClient
+import com.main.models.RegisterRequest
+import com.main.models.FCMUpdateRequest
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
+
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
@@ -29,6 +40,7 @@ class LoginActivity : AppCompatActivity() {
     private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+//            Log.w(TAG, "Google Sign-In was doing")
             handleSignInResult(task)
         } else {
             Log.w(TAG, "Google Sign-In was cancelled by the user. Result Code: ${result.resultCode}")
@@ -67,6 +79,41 @@ class LoginActivity : AppCompatActivity() {
         googleSignInLauncher.launch(signInIntent)
     }
 
+    private suspend fun registerAndSyncFcm(email: String) {
+        try {
+            // Step 1: Register / login user (idempotent)
+            val registerResponse = RetrofitClient.apiService.registerUser(
+                RegisterRequest(email = email)
+            )
+
+            if (!registerResponse.isSuccessful) {
+                Log.w("Auth", "Register failed: ${registerResponse.code()}")
+                // Don't return — still try to send FCM token (user might already exist)
+            } else {
+                Log.d("Auth", "Register: ${registerResponse.body()?.message}")
+            }
+
+            // Step 2: Get FCM token and send it
+            val fcmToken = Firebase.messaging.token.await()  // This is suspend + safe!
+
+            val fcmResponse = RetrofitClient.apiService.setFcmToken(
+                FCMUpdateRequest(email = email, fcm_token = fcmToken)
+            )
+
+            if (fcmResponse.isSuccessful) {
+                withContext(Dispatchers.Main) {
+                    Log.d("FCM", "Token synced successfully for $email")
+                    // Optional: Toast.makeText(this@SignInActivity, "Ready!", Toast.SHORT).show()
+                }
+            } else {
+                Log.w("FCM", "Failed to sync FCM token: ${fcmResponse.code()}")
+            }
+
+        } catch (e: Exception) {
+            Log.e("Auth/FCM", "Failed during register or FCM sync", e)
+            // Don't crash — user can still use app, will retry next login
+        }
+    }
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
         try {
             val account = completedTask.getResult(ApiException::class.java)
@@ -89,6 +136,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    // should handle here
     private fun handleTraditionalLogin() {
         val email = binding.emailEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString().trim()
@@ -115,7 +163,12 @@ class LoginActivity : AppCompatActivity() {
         // Credentials are correct, proceed with login
         val dummyToken = "token_for_$email"
         saveCredentials(dummyToken, email)
-        
+
+        // Register + Sync FCM using coroutines
+        CoroutineScope(Dispatchers.IO).launch {
+            registerAndSyncFcm(email)
+        }
+
         updateUI(Any())
     }
     

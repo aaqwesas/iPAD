@@ -1,8 +1,27 @@
 package com.main.models
 
-data class TokenResponse(
-    val token: String,
-    val message: String
+data class RegisterResponse(
+    val message: String,
+    val is_new: Boolean
+    // val email: String? = null  // optional, if you return it
+)
+
+data class RegisterRequest(
+    val email: String
+)
+
+data class FCMUpdateRequest(
+    val email: String,
+    val fcm_token: String
+)
+
+data class SimpleResponse(val status: String)
+
+data class CreateAlertRequest(
+    val email: String,
+    val symbol: String,
+    val target_price: Double,
+    val condition: String  // "above", "below", "rises_above", "drops_below"
 )
 
 data class TokenVerifyRequest(

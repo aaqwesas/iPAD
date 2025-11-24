@@ -10,26 +10,42 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
 import com.example.ipad.databinding.FragmentAlertsBinding
 import com.main.MainActivity
+import com.main.StockRepository
+import com.main.StockData
+import com.main.api.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+// Move AlertType enum to top level or companion object
+enum class AlertType {
+    PRICE_ABOVE,
+    PRICE_BELOW,
+    PERCENTAGE_RISE,
+    PERCENTAGE_FALL,
+    VOLUME,
+    TURNOVER
+}
 
 class AlertsFragment : Fragment() {
 
     private var _binding: FragmentAlertsBinding? = null
     private val binding get() = _binding!!
 
-    // Mock current stock data - set to values that WON'T trigger alerts initially
-    private val currentStockData = mapOf(
-        "AAPL" to StockData(95.00, 100.00, 500000, -2.0), // Current price BELOW alert thresholds
-        "GOOGL" to StockData(2600.00, 2720.00, 300000, -1.5)
-    )
-
     // Track which alerts have been shown to avoid duplicates
     private val shownAlerts = mutableSetOf<String>()
+
+    // Store the stock names from API
+    private val availableStocks = mutableListOf<String>()
 
     // Enhanced sample data with proper types
     private val priceRiseConditions = listOf(
@@ -52,6 +68,30 @@ class AlertsFragment : Fragment() {
         AlertCondition("Turnover ratio exceeds", "10%", true, AlertType.PERCENTAGE_RISE)
     )
 
+    // Data class for alert conditions
+    data class AlertCondition(
+        var name: String,
+        var value: String,
+        var isEnabled: Boolean,
+        var type: AlertType = AlertType.PRICE_ABOVE,
+        var stockSymbol: String = "",
+        var stockName: String = ""  // Add company name
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+            other as AlertCondition
+            return name == other.name && value == other.value && stockSymbol == other.stockSymbol
+        }
+
+        override fun hashCode(): Int {
+            var result = name.hashCode()
+            result = 31 * result + value.hashCode()
+            result = 31 * result + stockSymbol.hashCode()
+            return result
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -63,8 +103,100 @@ class AlertsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadStockDataAndSetupSpinner()
         setupAlertConditions()
-        setupTestButtons() // Add test buttons for manual testing
+        setupSaveButton()
+    }
+
+    private fun loadStockDataAndSetupSpinner() {
+        // Show loading state
+        binding.stockSpinner.visibility = View.GONE
+//        binding.progressBar.visibility = View.VISIBLE
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.getStocks()
+                if (response.isSuccessful) {
+                    val apiStocks = response.body() ?: emptyList()
+
+                    // Create formatted list: "Company Name (TICKER)"
+                    val stockDisplayList = apiStocks.map { stock ->
+                        "${stock.symbol}"
+                    }
+
+                    // Store both display names and raw data for later use
+                    availableStocks.clear()
+                    availableStocks.addAll(stockDisplayList)
+
+                    withContext(Dispatchers.Main) {
+                        setupSpinner(stockDisplayList)
+//                        binding.progressBar.visibility = View.GONE
+                        binding.stockSpinner.visibility = View.VISIBLE
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        // Fallback to repository data if API fails
+                        setupSpinner(StockRepository.stockNames)
+//                        binding.progressBar.visibility = View.GONE
+                        binding.stockSpinner.visibility = View.VISIBLE
+                        Toast.makeText(requireContext(), "Using cached stock data", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    // Fallback to repository data on error
+                    setupSpinner(StockRepository.stockNames)
+//                    binding.progressBar.visibility = View.GONE
+                    binding.stockSpinner.visibility = View.VISIBLE
+                    Toast.makeText(requireContext(), "Using cached stock data", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun setupSpinner(stockList: List<String>) {
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, stockList)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.stockSpinner.adapter = adapter
+
+        // Set default selection if needed
+        if (stockList.isNotEmpty()) {
+            binding.stockSpinner.setSelection(0)
+        }
+    }
+
+    private fun setupSaveButton() {
+        binding.saveAlertButton.setOnClickListener {
+            val selectedStock = binding.stockSpinner.selectedItem.toString()
+
+            // Extract ticker from selection (format: "Company Name (TICKER)")
+            val ticker = extractTickerFromSelection(selectedStock)
+            val companyName = extractCompanyNameFromSelection(selectedStock)
+
+            Toast.makeText(requireContext(), "Alert saved for $companyName ($ticker)", Toast.LENGTH_SHORT).show()
+
+            // Update any conditions with the selected stock
+            updateConditionsWithSelectedStock(ticker, companyName)
+        }
+    }
+
+    private fun extractTickerFromSelection(selection: String): String {
+        // Extract ticker from "Company Name (TICKER)" format
+        return selection.substringAfterLast("(").removeSuffix(")").trim()
+    }
+
+    private fun extractCompanyNameFromSelection(selection: String): String {
+        // Extract company name from "Company Name (TICKER)" format
+        return selection.substringBeforeLast("(").trim()
+    }
+
+    private fun updateConditionsWithSelectedStock(ticker: String, companyName: String) {
+        // Update all conditions with the selected stock
+        val allConditions = priceRiseConditions + priceFallConditions + marketDataConditions
+        allConditions.forEach { condition ->
+            condition.stockSymbol = ticker
+            condition.stockName = companyName
+        }
     }
 
     private fun setupAlertConditions() {
@@ -99,92 +231,10 @@ class AlertsFragment : Fragment() {
                     switchView.setOnCheckedChangeListener { _, isChecked ->
                         condition.isEnabled = isChecked
                         saveAlertCondition(condition)
-                        // Don't check immediately when enabling - let user test manually
                     }
                 }
             }
         }
-    }
-
-    // Add test buttons to manually trigger different scenarios
-    private fun setupTestButtons() {
-        // Create a test layout
-        val testLayout = android.widget.LinearLayout(requireContext()).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 16, 0, 16)
-            }
-        }
-
-        // Test buttons
-        val testPriceRiseButton = android.widget.Button(requireContext()).apply {
-            text = "TEST: Trigger Price Rise Alert"
-            setOnClickListener { testPriceRiseScenario() }
-        }
-
-        val testPriceFallButton = android.widget.Button(requireContext()).apply {
-            text = "TEST: Trigger Price Fall Alert"
-            setOnClickListener { testPriceFallScenario() }
-        }
-
-        val testVolumeAlertButton = android.widget.Button(requireContext()).apply {
-            text = "TEST: Trigger Volume Alert"
-            setOnClickListener { testVolumeScenario() }
-        }
-
-        val resetAlertsButton = android.widget.Button(requireContext()).apply {
-            text = "RESET: Clear All Alerts"
-            setOnClickListener { resetAlerts() }
-        }
-
-        // Add buttons to test layout
-        testLayout.addView(testPriceRiseButton)
-        testLayout.addView(testPriceFallButton)
-        testLayout.addView(testVolumeAlertButton)
-        testLayout.addView(resetAlertsButton)
-
-        // Add test layout to the main layout
-        (binding.root as? android.widget.ScrollView)?.getChildAt(0)?.let { mainLayout ->
-            if (mainLayout is android.widget.LinearLayout) {
-                mainLayout.addView(testLayout, 0) // Add at top
-            }
-        }
-    }
-
-    // Test scenarios
-    private fun testPriceRiseScenario() {
-        // Simulate AAPL price rising to trigger "Price rises above 100" alert
-        val testStockData = StockData(105.00, 100.00, 500000, 5.0) // Price above 100
-        val condition = priceRiseConditions[0] // "Price rises above" condition
-
-        shownAlerts.clear() // Clear previous alerts
-        showPriceAlertNotification(condition, testStockData)
-    }
-
-    private fun testPriceFallScenario() {
-        // Simulate AAPL price falling to trigger "Price drops to 50" alert
-        val testStockData = StockData(48.00, 50.00, 500000, -4.0) // Price below 50
-        val condition = priceFallConditions[0] // "Price drops to" condition
-
-        shownAlerts.clear() // Clear previous alerts
-        showPriceAlertNotification(condition, testStockData)
-    }
-
-    private fun testVolumeScenario() {
-        // Simulate high volume to trigger "Volume exceeds 1M" alert
-        val testStockData = StockData(95.00, 100.00, 2000000, -2.0) // Volume 2M
-        val condition = marketDataConditions[0] // "Volume exceeds" condition
-
-        shownAlerts.clear() // Clear previous alerts
-        showPriceAlertNotification(condition, testStockData)
-    }
-
-    private fun resetAlerts() {
-        shownAlerts.clear()
-        android.widget.Toast.makeText(requireContext(), "All alerts reset", android.widget.Toast.LENGTH_SHORT).show()
     }
 
     private fun showValueDialog(condition: AlertCondition, valueView: View) {
@@ -205,10 +255,9 @@ class AlertsFragment : Fragment() {
                     condition.value = newValue
                     valueView.findViewById<android.widget.TextView>(R.id.tv_condition_value).text = newValue
                     saveAlertCondition(condition)
-                    // Show test button after value change
-                    android.widget.Toast.makeText(requireContext(), "Value updated. Use TEST buttons to check alerts.", android.widget.Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Value updated.", Toast.LENGTH_SHORT).show()
                 } else {
-                    android.widget.Toast.makeText(requireContext(), "Invalid value format", android.widget.Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Invalid value format", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -224,38 +273,6 @@ class AlertsFragment : Fragment() {
                 value.endsWith("%") && value.dropLast(1).toDoubleOrNull() != null
             }
             else -> value.isNotBlank()
-        }
-    }
-
-    // Manual alert checking - call this when you want to test
-    fun testAlertsManually() {
-        val activeConditions = (priceRiseConditions + priceFallConditions + marketDataConditions)
-            .filter { it.isEnabled }
-
-        if (activeConditions.isEmpty()) {
-            android.widget.Toast.makeText(requireContext(), "No active alerts to test", android.widget.Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        activeConditions.forEach { condition ->
-            // Use test data instead of real current data
-            when (condition.type) {
-                AlertType.PRICE_ABOVE -> {
-                    val testData = StockData(105.00, 100.00, 500000, 5.0)
-                    showPriceAlertNotification(condition, testData)
-                }
-                AlertType.PRICE_BELOW -> {
-                    val testData = StockData(45.00, 50.00, 500000, -10.0)
-                    showPriceAlertNotification(condition, testData)
-                }
-                AlertType.PERCENTAGE_RISE -> {
-                    val testData = StockData(95.00, 90.00, 500000, 6.0) // 6% rise
-                    showPriceAlertNotification(condition, testData)
-                }
-                else -> {
-                    // Handle other types as needed
-                }
-            }
         }
     }
 
@@ -440,46 +457,6 @@ class AlertsFragment : Fragment() {
     private fun saveAlertCondition(condition: AlertCondition) {
         // In real app, save to SharedPreferences or database
         android.util.Log.d("AlertsFragment", "Saved: ${condition.name} = ${condition.value}, Enabled: ${condition.isEnabled}")
-    }
-
-    // Data classes
-    data class AlertCondition(
-        var name: String,
-        var value: String,
-        var isEnabled: Boolean,
-        var type: AlertType = AlertType.PRICE_ABOVE,
-        var stockSymbol: String = "AAPL"
-    ) {
-        // Add equals and hashCode for proper comparison
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            other as AlertCondition
-            return name == other.name && value == other.value && stockSymbol == other.stockSymbol
-        }
-
-        override fun hashCode(): Int {
-            var result = name.hashCode()
-            result = 31 * result + value.hashCode()
-            result = 31 * result + stockSymbol.hashCode()
-            return result
-        }
-    }
-
-    data class StockData(
-        val currentPrice: Double,
-        val previousClose: Double,
-        val volume: Long,
-        val changePercent: Double
-    )
-
-    enum class AlertType {
-        PRICE_ABOVE,
-        PRICE_BELOW,
-        PERCENTAGE_RISE,
-        PERCENTAGE_FALL,
-        VOLUME,
-        TURNOVER
     }
 
     override fun onDestroyView() {
