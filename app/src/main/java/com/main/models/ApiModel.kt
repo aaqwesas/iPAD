@@ -20,7 +20,7 @@ data class SimpleResponse(val status: String)
 data class CreateAlertRequest(
     val email: String,
     val symbol: String,
-    val target_price: Double,
+    val target: Double,
     val condition: String  // "above", "below", "rises_above", "drops_below"
 )
 

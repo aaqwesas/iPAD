@@ -25,6 +25,12 @@ def clear_stock_history() -> None:
         records = db.exec(statement).all()
         for record in records:
             db.delete(record)
+
+    with get_db_session() as db:
+        statement = select(StockHistoricalData_weekly)
+        records = db.exec(statement).all()
+        for record in records:
+            db.delete(record)
     print("Cleared existing stock historical data")
 
 
@@ -219,80 +225,92 @@ def send_fcm_notification(token: str, title: str, body: str):
 
 # The full background task (fetch → store → check alerts)
 async def stock_price_watcher(tickers: list[str]):
+    # print('working')
     while True:
         start_time = asyncio.get_event_loop().time()
 
+        # print(tickers)
         for ticker in tickers:
-            db = next(get_db_session())  # fresh session per ticker
-            try:
-                # 1. Fetch + store new price (blocking → run in thread)
-                loop = asyncio.get_event_loop()
-                result = await loop.run_in_executor(
-                    None, process_ticker, ticker, db, "1m", "1d"
-                )
-
-                if not result:
-                    continue
-
-                current_price = (
-                    result.price
-                )  # ← this is the latest price you just saved
-
-                # 2. IMMEDIATELY AFTER saving → check alerts for this ticker
-                alerts = db.exec(
-                    select(PriceAlert).where(
-                        and_(
-                            PriceAlert.symbol == ticker.upper(),
-                            PriceAlert.is_active == True,
-                            PriceAlert.notified == False,
-                        )
+            # print(ticker)
+            # db = next(get_db_session())  # fresh session per ticker
+            with get_db_session() as db:
+                try:
+                    # 1. Fetch + store new price (blocking → run in thread)
+                    loop = asyncio.get_event_loop()
+                    result = await loop.run_in_executor(
+                        None, process_ticker, ticker, db, "1m", "1d"
                     )
-                ).all()
 
-                for alert in alerts:
-                    triggered = False
+                    if not result:
+                        continue
 
-                    if (
-                        alert.condition in ("above", "rises_above")
-                        and current_price > alert.target_price
-                    ):
-                        triggered = True
-                    elif (
-                        alert.condition in ("below", "drops_below")
-                        and current_price < alert.target_price
-                    ):
-                        triggered = True
+                    current_price = (
+                        result.price
+                    )  # ← this is the latest price you just saved
 
-                    if triggered:
-                        user = db.exec(
-                            select(User).where(User.id == alert.user_id)
-                        ).first()
-                        if user and user.fcm_token:
-                            title = f"{ticker} Alert Triggered!"
-                            direction = (
-                                "above" if "above" in alert.condition else "below"
+
+                    # print(current_price)
+                    # if (ticker.upper() == "3115.HK"):
+                    #     print(current_price)
+                    # 2. IMMEDIATELY AFTER saving → check alerts for this ticker
+                    alerts = db.exec(
+                        select(PriceAlert).where(
+                            and_(
+                                PriceAlert.symbol == ticker.upper(),
+                                PriceAlert.is_active == True,
+                                PriceAlert.notified == False,
                             )
-                            body = f"{ticker} is now ${current_price:.2f} ({direction} ${alert.target_price})"
+                        )
+                    ).all()
 
-                            # Fire and forget (non-blocking)
-                            asyncio.create_task(
-                                send_notification_async(user.fcm_token, title, body)
-                            )
+                    # print('work')
+                    for alert in alerts:
+                        # print(alert)
+                        # print(current_price)
+                        # print(alert.target)
+                        triggered = False
 
-                        # Mark as done
-                        alert.notified = True
-                        alert.is_active = False
-                        alert.triggered_at = datetime.utcnow()
-                        alert.triggered_price = current_price
-                        db.add(alert)
+                        if (
+                            alert.condition in ("above", "rises_above")
+                            and current_price > alert.target
+                        ):
+                            triggered = True
+                        elif (
+                            alert.condition in ("below", "drops_below")
+                            and current_price < alert.target
+                        ):
+                            triggered = True
 
-                db.commit()  # commit price + alert updates together
+                        if triggered:
+                            user = db.exec(
+                                select(User).where(User.token == alert.user_token)
+                            ).first()
+                            if user and user.fcm_token:
+                                title = f"{ticker} Alert Triggered!"
+                                direction = (
+                                    "above" if "above" in alert.condition else "below"
+                                )
+                                body = f"{ticker} is now ${current_price:.2f} ({direction} ${alert.target})"
 
-            except Exception as e:
-                print(f"Error processing {ticker}: {e}")
-                db.rollback()
-            finally:
-                db.close()
+                                # Fire and forget (non-blocking)
+                                asyncio.create_task(
+                                    send_notification_async(user.fcm_token, title, body)
+                                )
+
+                            # Mark as done
+                            alert.notified = True
+                            alert.is_active = False
+                            alert.triggered_at = datetime.datetime.now()
+                            alert.triggered_price = current_price
+                            db.add(alert)
+
+                    db.commit()  # commit price + alert updates together
+
+                except Exception as e:
+                    # print(f"Error processing {ticker}: {e}")
+                    db.rollback()
+                finally:
+                    db.close()
 
         # Sleep until next minute
         elapsed = asyncio.get_event_loop().time() - start_time

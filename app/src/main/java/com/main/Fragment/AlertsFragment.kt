@@ -5,8 +5,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,14 +19,17 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
 import com.example.ipad.databinding.FragmentAlertsBinding
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.main.MainActivity
 import com.main.StockRepository
 import com.main.StockData
 import com.main.api.RetrofitClient
+import com.main.models.CreateAlertRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.text.substringBefore
 
 // Move AlertType enum to top level or companion object
 enum class AlertType {
@@ -32,11 +37,15 @@ enum class AlertType {
     PRICE_BELOW,
     PERCENTAGE_RISE,
     PERCENTAGE_FALL,
-    VOLUME,
-    TURNOVER
+    VOLUME
 }
 
 class AlertsFragment : Fragment() {
+
+    private var username: String = ""
+    private var email: String = ""
+
+    private lateinit var sharedPreferences: SharedPreferences
 
     private var _binding: FragmentAlertsBinding? = null
     private val binding get() = _binding!!
@@ -50,22 +59,16 @@ class AlertsFragment : Fragment() {
     // Enhanced sample data with proper types
     private val priceRiseConditions = listOf(
         AlertCondition("Price rises above", "100.00", true, AlertType.PRICE_ABOVE),
-        AlertCondition("1D rise exceeds", "5%", false, AlertType.PERCENTAGE_RISE),
-        AlertCondition("Change in 3 min is up", "2%", true, AlertType.PERCENTAGE_RISE),
-        AlertCondition("Change in 5 min is up", "3%", false, AlertType.PERCENTAGE_RISE)
+        AlertCondition("1D rise exceeds", "5%", false, AlertType.PERCENTAGE_RISE)
     )
 
     private val priceFallConditions = listOf(
         AlertCondition("Price drops to", "50.00", true, AlertType.PRICE_BELOW),
-        AlertCondition("1D fall exceeds", "3%", false, AlertType.PERCENTAGE_FALL),
-        AlertCondition("Change in 3 min is down", "1.5%", true, AlertType.PERCENTAGE_FALL),
-        AlertCondition("Change in 5 min is down", "2.5%", false, AlertType.PERCENTAGE_FALL)
+        AlertCondition("1D fall exceeds", "3%", false, AlertType.PERCENTAGE_FALL)
     )
 
     private val marketDataConditions = listOf(
-        AlertCondition("Volume exceeds", "1M", true, AlertType.VOLUME),
-        AlertCondition("Turnover Above", "500K", false, AlertType.TURNOVER),
-        AlertCondition("Turnover ratio exceeds", "10%", true, AlertType.PERCENTAGE_RISE)
+        AlertCondition("Volume exceeds", "1M", true, AlertType.VOLUME)
     )
 
     // Data class for alert conditions
@@ -74,8 +77,7 @@ class AlertsFragment : Fragment() {
         var value: String,
         var isEnabled: Boolean,
         var type: AlertType = AlertType.PRICE_ABOVE,
-        var stockSymbol: String = "",
-        var stockName: String = ""  // Add company name
+        var stockSymbol: String = ""
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -103,9 +105,29 @@ class AlertsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        sharedPreferences = requireContext().getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
+        setupUserInfoInMemory()
         loadStockDataAndSetupSpinner()
         setupAlertConditions()
         setupSaveButton()
+    }
+
+    private fun setupUserInfoInMemory(){
+
+        val googleAccount = GoogleSignIn.getLastSignedInAccount(requireContext())
+        if (googleAccount != null) {
+            username = googleAccount.displayName ?: "User"
+            email = googleAccount.email ?: "user@example.com"
+        } else {
+            val savedEmail = sharedPreferences.getString("user_email", null)
+            if (savedEmail != null) {
+                username = savedEmail.substringBefore('@')
+                email = savedEmail
+            } else {
+                username = "User"
+                email = "user@example.com"
+            }
+        }
     }
 
     private fun loadStockDataAndSetupSpinner() {
@@ -169,33 +191,137 @@ class AlertsFragment : Fragment() {
         binding.saveAlertButton.setOnClickListener {
             val selectedStock = binding.stockSpinner.selectedItem.toString()
 
-            // Extract ticker from selection (format: "Company Name (TICKER)")
-            val ticker = extractTickerFromSelection(selectedStock)
-            val companyName = extractCompanyNameFromSelection(selectedStock)
+//            // Extract ticker from selection (format: "Company Name (TICKER)")
+//            val ticker = extractTickerFromSelection(selectedStock)
+//            val companyName = extractCompanyNameFromSelection(selectedStock)
 
-            Toast.makeText(requireContext(), "Alert saved for $companyName ($ticker)", Toast.LENGTH_SHORT).show()
+            val ticker = selectedStock
+
+            Toast.makeText(requireContext(), "Alert saved for ($ticker)", Toast.LENGTH_SHORT).show()
 
             // Update any conditions with the selected stock
-            updateConditionsWithSelectedStock(ticker, companyName)
+            updateConditionsWithSelectedStock(ticker)
+
+            // Collect all enabled alerts
+            val enabledAlerts = (priceRiseConditions + priceFallConditions + marketDataConditions)
+                .filter { it.isEnabled }
+                .mapNotNull { condition ->
+                    mapToCreateAlertRequest(email, selectedStock, condition)
+                }
+
+            if (enabledAlerts.isEmpty()) {
+                Toast.makeText(requireContext(), "No alerts enabled", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Show loading
+            binding.saveAlertButton.isEnabled = false
+            binding.saveAlertButton.text = "Saving..."
+
+            // Send all alerts in parallel (fire-and-forget with error handling)
+            CoroutineScope(Dispatchers.IO).launch {
+                var successCount = 0
+                var errorCount = 0
+
+                enabledAlerts.forEach { request ->
+                    try {
+                        val response = RetrofitClient.apiService.createAlert(request)
+                        if (response.isSuccessful) {
+                            successCount++
+                        } else {
+                            errorCount++
+                            Log.w("Alert", "Failed: ${request.condition} ${request.target} for ${request.symbol}")
+                        }
+                    } catch (e: Exception) {
+                        errorCount++
+                        Log.e("Alert", "Network error", e)
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    binding.saveAlertButton.isEnabled = true
+                    binding.saveAlertButton.text = "Save Alerts"
+
+                    if (errorCount == 0) {
+                        Toast.makeText(
+                            requireContext(),
+                            "$successCount alert(s) saved successfully!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "$successCount saved, $errorCount failed",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
         }
     }
 
-    private fun extractTickerFromSelection(selection: String): String {
-        // Extract ticker from "Company Name (TICKER)" format
-        return selection.substringAfterLast("(").removeSuffix(")").trim()
+    private fun mapToCreateAlertType(
+        type: AlertType,
+        value: String,
+        isPrice: Boolean
+    ): Pair<String, Double>? {
+        val cleanedValue = when (type) {
+            AlertType.PERCENTAGE_RISE,
+            AlertType.PERCENTAGE_FALL -> value.replace("%", "").replace(",", "")
+            AlertType.VOLUME -> value
+            else -> value.replace(",", "")
+        }
+
+        val targetValue = when (type) {
+            AlertType.VOLUME -> parseVolume(cleanedValue)
+            else -> cleanedValue.toDoubleOrNull()
+        } ?: return null  // ← invalid number → skip alert
+
+        val conditionStr = when (type) {
+            AlertType.PRICE_ABOVE -> "above"
+            AlertType.PRICE_BELOW -> "below"
+            AlertType.PERCENTAGE_RISE -> "rises_above"
+            AlertType.PERCENTAGE_FALL -> "drops_below"
+            AlertType.VOLUME -> "volume_above"
+        }
+
+        return conditionStr to targetValue
     }
 
-    private fun extractCompanyNameFromSelection(selection: String): String {
-        // Extract company name from "Company Name (TICKER)" format
-        return selection.substringBeforeLast("(").trim()
+    private fun parseVolume(value: String): Double {
+        val clean = value.uppercase().replace(",", "")
+        return when {
+            clean.endsWith("K") -> clean.dropLast(1).toDoubleOrNull()?.times(1_000) ?: 0.0
+            clean.endsWith("M") -> clean.dropLast(1).toDoubleOrNull()?.times(1_000_000) ?: 0.0
+            clean.endsWith("B") -> clean.dropLast(1).toDoubleOrNull()?.times(1_000_000_000) ?: 0.0
+            else -> clean.toDoubleOrNull() ?: 0.0
+        }
     }
 
-    private fun updateConditionsWithSelectedStock(ticker: String, companyName: String) {
+    private fun mapToCreateAlertRequest(
+        email: String,
+        symbol: String,
+        condition: AlertCondition
+    ): CreateAlertRequest? {
+        val mapped = mapToCreateAlertType(condition.type, condition.value, condition.type != AlertType.VOLUME)
+            ?: return null
+
+        val (conditionStr, targetValue) = mapped
+
+        return CreateAlertRequest(
+            email = email,
+            symbol = symbol,
+            target = targetValue,
+            condition = conditionStr
+        )
+    }
+
+
+    private fun updateConditionsWithSelectedStock(ticker: String) {
         // Update all conditions with the selected stock
         val allConditions = priceRiseConditions + priceFallConditions + marketDataConditions
         allConditions.forEach { condition ->
             condition.stockSymbol = ticker
-            condition.stockName = companyName
         }
     }
 
@@ -276,6 +402,38 @@ class AlertsFragment : Fragment() {
         }
     }
 
+    private fun updateConditionSwitch(condition: AlertCondition) {
+        // Find and update the switch state in the UI
+        val allConditions = priceRiseConditions + priceFallConditions + marketDataConditions
+        allConditions.forEachIndexed { index, cond ->
+            if (cond == condition) {
+                // In a real app, you'd find the actual switch view and update it
+                // For now, we'll just log it
+                android.util.Log.d("AlertsFragment", "Updated switch for ${condition.name} to ${condition.isEnabled}")
+            }
+        }
+    }
+
+    private fun saveAlertCondition(condition: AlertCondition) {
+        // In real app, save to SharedPreferences or database
+        android.util.Log.d("AlertsFragment", "Saved: ${condition.name} = ${condition.value}, Enabled: ${condition.isEnabled}")
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun extractTickerFromSelection(selection: String): String {
+        // Extract ticker from "Company Name (TICKER)" format
+        return selection.substringAfterLast("(").removeSuffix(")").trim()
+    }
+
+    private fun extractCompanyNameFromSelection(selection: String): String {
+        // Extract company name from "Company Name (TICKER)" format
+        return selection.substringBeforeLast("(").trim()
+    }
+    // not using
     private fun showPriceAlertNotification(condition: AlertCondition, stockData: StockData) {
         // Create a unique key for this alert to avoid duplicates
         val alertKey = "${condition.stockSymbol}_${condition.name}_${condition.value}"
@@ -373,51 +531,51 @@ class AlertsFragment : Fragment() {
     }
 
     private fun createNotification(condition: AlertCondition, stockData: StockData) {
-        val channelId = "stock_alerts_channel"
-        val notificationId = System.currentTimeMillis().toInt() // Unique ID for each notification
-
-        // Create notification channel (required for Android 8.0+)
-        val channel = NotificationChannel(
-            channelId,
-            "Stock Alerts",
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Notifications for stock price alerts"
-            enableVibration(true)
-            enableLights(true)
-            lightColor = android.graphics.Color.BLUE
-        }
-
-        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
-
-        // Create intent for when notification is tapped
-        val intent = Intent(requireContext(), MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            requireContext(),
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // Build notification
-        val notification = NotificationCompat.Builder(requireContext(), channelId)
-            .setSmallIcon(R.drawable.notification) // Add your notification icon
-            .setContentTitle(getNotificationTitle(condition))
-            .setContentText(getNotificationMessage(condition, stockData))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true) // Dismiss notification when tapped
-            .setContentIntent(pendingIntent)
-            .setVibrate(longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400))
-            .setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION))
-
-        // Show notification
-        with(NotificationManagerCompat.from(requireContext())) {
-            notify(notificationId, notification.build())
-        }
+//        val channelId = "stock_alerts_channel"
+//        val notificationId = System.currentTimeMillis().toInt() // Unique ID for each notification
+//
+//        // Create notification channel (required for Android 8.0+)
+//        val channel = NotificationChannel(
+//            channelId,
+//            "Stock Alerts",
+//            NotificationManager.IMPORTANCE_HIGH
+//        ).apply {
+//            description = "Notifications for stock price alerts"
+//            enableVibration(true)
+//            enableLights(true)
+//            lightColor = android.graphics.Color.BLUE
+//        }
+//
+//        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//        notificationManager.createNotificationChannel(channel)
+//
+//        // Create intent for when notification is tapped
+//        val intent = Intent(requireContext(), MainActivity::class.java).apply {
+//            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//        }
+//
+//        val pendingIntent = PendingIntent.getActivity(
+//            requireContext(),
+//            0,
+//            intent,
+//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
+//
+//        // Build notification
+//        val notification = NotificationCompat.Builder(requireContext(), channelId)
+//            .setSmallIcon(R.drawable.notification) // Add your notification icon
+//            .setContentTitle(getNotificationTitle(condition))
+//            .setContentText(getNotificationMessage(condition, stockData))
+//            .setPriority(NotificationCompat.PRIORITY_HIGH)
+//            .setAutoCancel(true) // Dismiss notification when tapped
+//            .setContentIntent(pendingIntent)
+//            .setVibrate(longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400))
+//            .setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION))
+//
+//        // Show notification
+//        with(NotificationManagerCompat.from(requireContext())) {
+//            notify(notificationId, notification.build())
+//        }
     }
 
     private fun getNotificationTitle(condition: AlertCondition): String {
@@ -442,25 +600,5 @@ class AlertsFragment : Fragment() {
         }
     }
 
-    private fun updateConditionSwitch(condition: AlertCondition) {
-        // Find and update the switch state in the UI
-        val allConditions = priceRiseConditions + priceFallConditions + marketDataConditions
-        allConditions.forEachIndexed { index, cond ->
-            if (cond == condition) {
-                // In a real app, you'd find the actual switch view and update it
-                // For now, we'll just log it
-                android.util.Log.d("AlertsFragment", "Updated switch for ${condition.name} to ${condition.isEnabled}")
-            }
-        }
-    }
 
-    private fun saveAlertCondition(condition: AlertCondition) {
-        // In real app, save to SharedPreferences or database
-        android.util.Log.d("AlertsFragment", "Saved: ${condition.name} = ${condition.value}, Enabled: ${condition.isEnabled}")
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }

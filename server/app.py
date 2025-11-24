@@ -338,7 +338,7 @@ def create_alert(req: CreateAlertRequest):
             user_id=user.id,
             user_token=email,       
             symbol=req.symbol.upper(),
-            target_price=req.target_price,
+            target=req.target,
             condition=req.condition
         )
         db.add(alert)

@@ -77,5 +77,5 @@ class FCMUpdate(BaseModel):
 class CreateAlertRequest(BaseModel):
     email: str
     symbol: str
-    target_price: float
+    target: float
     condition: str

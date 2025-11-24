@@ -65,11 +65,10 @@ class StockHistoricalData_weekly(SQLModel, table=True):
 
 class PriceAlert(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id")
-    user_token: str = Field(index=True)
+    user_token: str = Field(foreign_key="users.token", index=True)
     symbol: str
-    target_price: float
-    condition: str  # "above", "below", "rises_above", "drops_below"
+    target: float
+    condition: str  # "above", "below", "dayup", "daydown", "volume above"
     is_active: bool = True
     notified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now())
