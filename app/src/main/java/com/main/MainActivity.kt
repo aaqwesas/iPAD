@@ -66,14 +66,14 @@ class MainActivity : AppCompatActivity() {
             setupBottomNavigation()
         }
 
-        // In MainActivity.kt — keep ONLY this for testing
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                Log.d("FCM_TOKEN", "Your FCM token: $token")
-                Toast.makeText(this, "FCM ready (check Logcat)", Toast.LENGTH_SHORT).show()
-            }
-        }
+//        // In MainActivity.kt — keep ONLY this for testing
+//        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+//            if (task.isSuccessful) {
+//                val token = task.result
+//                Log.d("FCM_TOKEN", "Your FCM token: $token")
+//                Toast.makeText(this, "FCM ready (check Logcat)", Toast.LENGTH_SHORT).show()
+//            }
+//        }
     }
 
     private fun requestNotificationPermission() {

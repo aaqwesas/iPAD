@@ -54,7 +54,6 @@ app = create_app()
 async def test_push():
     # ←←← REPLACE THIS WITH A REAL TOKEN FROM YOUR PHONE LOGS ←←←
     test_token = "dp9Xoj_5RH29NBdELTJoTj:APA91bGSVH_hRb3t2OSNeXXk__KxNJoauX3xpAv3EJOYkvl8V3KmC8x_yprjEgigE0VDDIZCejme0ef1wcVjMEWT5QVKbzFesHw1n3jO5KQvY3hnK8aOBZE"
-    
     send_fcm_notification(
         token=test_token,
         title="IT WORKS!",

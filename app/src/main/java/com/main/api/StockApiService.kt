@@ -5,6 +5,9 @@ import retrofit2.http.*
 import com.main.models.RegisterResponse
 import com.main.models.RegisterRequest
 import com.main.models.TokenVerifyRequest
+import com.main.models.FCMUpdateRequest
+import com.main.models.CreateAlertRequest
+import com.main.models.SimpleResponse
 import com.main.models.Stock
 import com.main.models.OHLC
 import com.main.models.OHLC_history
@@ -16,6 +19,12 @@ interface StockApiService {
 
     @POST("api/verify-token")
     suspend fun verifyToken(@Body tokenData: TokenVerifyRequest): Response<VerifyTokenResponse>
+
+    @POST("api/set-fcm-token")
+    suspend fun setFcmToken(@Body request: FCMUpdateRequest): Response<SimpleResponse>
+
+    @POST("api/alerts")
+    suspend fun createAlert(@Body request: CreateAlertRequest): Response<SimpleResponse>
 
     @GET("api/stocks")
     suspend fun getStocks(): Response<List<Stock>>

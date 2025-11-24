@@ -10,6 +10,20 @@ data class RegisterRequest(
     val email: String
 )
 
+data class FCMUpdateRequest(
+    val email: String,
+    val fcm_token: String
+)
+
+data class SimpleResponse(val status: String)
+
+data class CreateAlertRequest(
+    val email: String,
+    val symbol: String,
+    val target_price: Double,
+    val condition: String  // "above", "below", "rises_above", "drops_below"
+)
+
 data class TokenVerifyRequest(
     val token: String
 )
