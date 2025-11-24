@@ -9,29 +9,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from response_type import TokenResponse, TokenVerify, Stock, StockCreate, StockHistorical
 from database import get_db_session, create_tables
-from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly
-from utils import create_data_fetcher, setup_database
+from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert
+from utils import create_data_fetcher, setup_database, send_fcm_notification
 
 import firebase_admin
-from firebase_admin import credentials, messaging
+from firebase_admin import credentials
 
 # Initialize Firebase Admin SDK (only once)
 if not firebase_admin._apps:
     cred = credentials.Certificate("firebase-adminsdk.json")
     firebase_admin.initialize_app(cred)
-
-def send_fcm_notification(token: str, title: str, body: str):
-    message = messaging.Message(
-        notification=messaging.Notification(title=title, body=body),
-        token=token,
-    )
-    try:
-        response = messaging.send(message)
-        print("Push sent successfully:", response)
-    except Exception as e:
-        print("Failed to send push:", e)
-
-
 
 # Create tables
 create_tables()
@@ -202,6 +189,26 @@ def create_stock(stock: StockCreate):
 def health_check():
     return {"status": "healthy", "timestamp": datetime.datetime.now()}
 
+
+@app.post("/api/set-fcm-token")
+async def set_fcm_token(token: str, user_token: str):
+    with get_db_session() as db:
+        user = db.exec(select(User).where(User.token == user_token)).first()
+        if not user:
+            raise HTTPException(404, "User not found")
+        user.fcm_token = token
+        db.add(user)
+        db.commit()
+    return {"status": "fcm token saved"}
+
+@app.post("/api/alerts")
+async def create_alert(alert: dict):  # or use Pydantic model
+    # validate user_token, etc.
+    with get_db_session() as db:
+        db_alert = PriceAlert(**alert, user_id=User.id)
+        db.add(db_alert)
+        db.commit()
+    return {"status": "alert created"}
 
 if __name__ == "__main__":
     import uvicorn
