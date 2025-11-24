@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView.setOnItemSelectedListener { item ->
             val selectedFragment: Fragment = when (item.itemId) {
                 R.id.nav_home -> HomeFragment()
-                R.id.nav_portfolio -> CandleFragment()
+//                R.id.nav_portfolio -> CandleFragment()
                 R.id.nav_profile -> ProfileFragment()
                 R.id.nav_alert -> AlertsFragment()
                 else -> HomeFragment() // Default to HomeFragment

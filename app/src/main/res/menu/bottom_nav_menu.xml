@@ -5,11 +5,11 @@
         android:enabled="true"
         android:title="@string/Home" />
 
-    <item
-        android:enabled="true"
-        android:id="@+id/nav_portfolio"
-        android:icon="@drawable/portfolio"
-        android:title="@string/Portfolio" />
+<!--    <item-->
+<!--        android:enabled="true"-->
+<!--        android:id="@+id/nav_portfolio"-->
+<!--        android:icon="@drawable/portfolio"-->
+<!--        android:title="@string/Portfolio" />-->
 
     <item
         android:enabled="true"
