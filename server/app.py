@@ -97,7 +97,7 @@ def get_stocks():
         return list(unique_stocks.values())
 
 @app.get("/api/stocks/history/{symbol}", response_model=List[StockHistorical])
-def get_stock_history(symbol: str):
+def get_stock_history_daily(symbol: str):
     """Get historical stock data for a specific symbol"""
     with get_db_session() as db:
         statement = (
@@ -111,7 +111,7 @@ def get_stock_history(symbol: str):
         return [StockHistorical.model_validate(stock) for stock in stocks]
     
 @app.get("/api/stocks/history/weekly/{symbol}", response_model=List[StockHistorical])
-def get_stock_history(symbol: str):
+def get_stock_history_weekly(symbol: str):
     """Get historical weekly stock data for a specific symbol"""
     with get_db_session() as db:
         statement = (
