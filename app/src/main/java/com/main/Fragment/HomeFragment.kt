@@ -48,7 +48,7 @@ class HomeFragment : Fragment() {
 
     private fun setupPortfolioBox() {
         // Set initial portfolio data
-        updatePortfolioData("$12,456.78", "+$245.67 (2.01%)")
+        updatePortfolioData("$100,000", "+$0 (0%)")
 
         // Set click listener for portfolio box
         portfolioBox.setOnClickListener {

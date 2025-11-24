@@ -55,6 +55,17 @@
 
         </LinearLayout>
 
+        <!-- Buy/Sell Button -->
+        <Button
+            android:id="@+id/btn_trade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trade"
+            android:backgroundTint="@color/purple_500"
+            android:textColor="@android:color/white"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
     </LinearLayout>
 
     <!-- Candle Chart Section -->

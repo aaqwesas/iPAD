@@ -35,9 +35,10 @@ class PortfolioFragment : DialogFragment() {
     }
 
     private fun setupPortfolioData() {
-        // Set sample portfolio data
-        view?.findViewById<TextView>(R.id.txt_portfolio_value)?.text = "$12,456.78"
-        view?.findViewById<TextView>(R.id.txt_daily_pl)?.text = "+$245.67 (2.01%)"
+        // Set default portfolio data - will be handled later from database
+
+        view?.findViewById<TextView>(R.id.txt_portfolio_value)?.text = "$100,000.00"
+        view?.findViewById<TextView>(R.id.txt_daily_pl)?.text = "+$0.00 (0.00%)"
 
         // Setup RecyclerView with portfolio stocks
         setupRecyclerView()
@@ -46,5 +47,6 @@ class PortfolioFragment : DialogFragment() {
     private fun setupRecyclerView() {
         val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_view_stocks)
         // Setup your adapter here with portfolio data
+        // Will be implemented later with database data
     }
 }

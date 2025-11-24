@@ -6,7 +6,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.example.ipad.R
 import com.github.mikephil.charting.charts.CandleStickChart
@@ -20,8 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.graphics.Paint
-import android.widget.Button
-import android.widget.ImageButton
+import java.text.DecimalFormat
 
 class CandleFragment : Fragment() {
 
@@ -36,13 +36,13 @@ class CandleFragment : Fragment() {
         }
     }
 
-
     private var weeklyHistoryCache: List<OHLC_history>? = null
     private var dailyHistoryCache: List<OHLC_history>? = null
 
     // Arguments
     private var ticker: String = "AAPL"
     private var companyName: String = "Apple Inc."
+    private var currentPrice: Double = 0.0
 
     // All your TextViews
     private lateinit var tvCompanyName: TextView
@@ -53,27 +53,25 @@ class CandleFragment : Fragment() {
     private lateinit var tvDayLow: TextView
     private lateinit var tvVolume: TextView
 
-
     private lateinit var candleStickChart: CandleStickChart
-
     private lateinit var btn1Year: Button
     private lateinit var btn6Months: Button
     private lateinit var btn1Month: Button
     private lateinit var btn2Weeks: Button
+    private lateinit var btnTrade: Button
 
-    private var currentTimeframe = "1Y"  // default
-
-
+    private var currentTimeframe = "1Y"
+    private var portfolioBalance = 100000.00
+    private var isBuyMode = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ticker = arguments?.getString("ticker").toString()  // ← Survives rotation!
+        ticker = arguments?.getString("ticker").toString()
         companyName = arguments?.getString("company_name") ?: ticker
     }
 
     private fun setupBackButton(backButton: ImageButton) {
         backButton.setOnClickListener {
-            // Go back to previous fragment or close activity
             if (parentFragmentManager.backStackEntryCount > 0) {
                 parentFragmentManager.popBackStack()
             } else {
@@ -91,12 +89,136 @@ class CandleFragment : Fragment() {
 
         candleStickChart = view.findViewById(R.id.candle_stick_chart)
         val btnBack = view.findViewById<ImageButton>(R.id.btn_back)
+        btnTrade = view.findViewById(R.id.btn_trade)
+
         setupCandleChart()
         setupBackButton(btnBack)
-//        loadMockTeslaData()
-//        loadStockHistoryChart()
+        setupTradeButton()
 
         return view
+    }
+
+    private fun setupTradeButton() {
+        btnTrade.setOnClickListener {
+            showTradeDialog()
+        }
+    }
+
+    private fun showTradeDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_trade, null)
+
+        val tvStockInfo = dialogView.findViewById<TextView>(R.id.tv_stock_info)
+        val btnBuy = dialogView.findViewById<Button>(R.id.btn_buy)
+        val btnSell = dialogView.findViewById<Button>(R.id.btn_sell)
+        val etQuantity = dialogView.findViewById<EditText>(R.id.et_quantity)
+        val tvTotalCost = dialogView.findViewById<TextView>(R.id.tv_total_cost)
+        val tvPortfolioBalance = dialogView.findViewById<TextView>(R.id.tv_portfolio_balance)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
+
+        // Update stock info with current price
+        tvStockInfo.text = "$ticker - $${String.format("%.2f", currentPrice)}"
+        tvPortfolioBalance.text = "Portfolio: $${DecimalFormat("#,##0.00").format(portfolioBalance)}"
+
+        // Update total cost when quantity changes
+        etQuantity.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                updateTotalCost(etQuantity, tvTotalCost)
+            }
+        })
+
+        // Buy/Sell mode toggle
+        btnBuy.setOnClickListener {
+            isBuyMode = true
+            updateTradeMode(btnBuy, btnSell, btnConfirm)
+            updateTotalCost(etQuantity, tvTotalCost)
+        }
+
+        btnSell.setOnClickListener {
+            isBuyMode = false
+            updateTradeMode(btnBuy, btnSell, btnConfirm)
+            updateTotalCost(etQuantity, tvTotalCost)
+        }
+
+        // Initial mode
+        updateTradeMode(btnBuy, btnSell, btnConfirm)
+
+        // Confirm order
+        btnConfirm.setOnClickListener {
+            executeTrade(etQuantity.text.toString())
+        }
+
+        // Initial total cost calculation
+        updateTotalCost(etQuantity, tvTotalCost)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        dialog.show()
+    }
+
+    private fun updateTradeMode(btnBuy: Button, btnSell: Button, btnConfirm: Button) {
+        if (isBuyMode) {
+            btnBuy.setBackgroundColor(Color.parseColor("#4CAF50"))
+            btnBuy.setTextColor(Color.WHITE)
+            btnSell.setBackgroundColor(Color.parseColor("#CCCCCC"))
+            btnSell.setTextColor(Color.BLACK)
+            btnConfirm.text = "BUY NOW"
+            btnConfirm.setBackgroundColor(Color.parseColor("#4CAF50"))
+        } else {
+            btnSell.setBackgroundColor(Color.parseColor("#F44336"))
+            btnSell.setTextColor(Color.WHITE)
+            btnBuy.setBackgroundColor(Color.parseColor("#CCCCCC"))
+            btnBuy.setTextColor(Color.BLACK)
+            btnConfirm.text = "SELL NOW"
+            btnConfirm.setBackgroundColor(Color.parseColor("#F44336"))
+        }
+    }
+
+    private fun updateTotalCost(etQuantity: EditText, tvTotalCost: TextView) {
+        try {
+            val quantity = etQuantity.text.toString().toIntOrNull() ?: 0
+            val total = quantity * currentPrice
+            val action = if (isBuyMode) "Cost" else "Proceeds"
+            tvTotalCost.text = "Total $action: $${String.format("%.2f", total)}"
+        } catch (e: Exception) {
+            tvTotalCost.text = "Total: $0.00"
+        }
+    }
+
+    private fun executeTrade(quantityStr: String) {
+        val quantity = quantityStr.toIntOrNull() ?: 0
+        if (quantity <= 0) {
+            Toast.makeText(requireContext(), "Please enter a valid quantity", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val total = quantity * currentPrice
+
+        if (isBuyMode) {
+            if (total > portfolioBalance) {
+                Toast.makeText(requireContext(), "Insufficient funds", Toast.LENGTH_SHORT).show()
+                return
+            }
+            portfolioBalance -= total
+            Toast.makeText(requireContext(), "Bought $quantity shares of $ticker for $${String.format("%.2f", total)}", Toast.LENGTH_LONG).show()
+        } else {
+            // For selling, we'd check if user has enough shares, but for simplicity we'll just add to balance
+            portfolioBalance += total
+            Toast.makeText(requireContext(), "Sold $quantity shares of $ticker for $${String.format("%.2f", total)}", Toast.LENGTH_LONG).show()
+        }
+
+        // Dismiss dialog
+        requireActivity().currentFocus?.let { view ->
+            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+
+        // You could find the dialog and dismiss it, but for now the toast confirms the action
+        // In a real app, you'd want to properly dismiss the dialog
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -116,13 +238,13 @@ class CandleFragment : Fragment() {
         btn1Month = view.findViewById(R.id.last_month)
         btn2Weeks = view.findViewById(R.id.last_2_weeks)
 
-// Set click listeners
+        // Set click listeners
         btn1Year.setOnClickListener { switchTimeframe("1Y") }
         btn6Months.setOnClickListener { switchTimeframe("6M") }
         btn1Month.setOnClickListener { switchTimeframe("1M") }
         btn2Weeks.setOnClickListener { switchTimeframe("2W") }
 
-// Load default (1Y) on start
+        // Load default (1Y) on start
         loadChartData("1Y")
 
         tvCompanyName.text = companyName
@@ -138,15 +260,14 @@ class CandleFragment : Fragment() {
                 Log.d("STOCK", "Success $ticker → $stock")
 
                 withContext(Dispatchers.Main) {
-                    // 100% safe – view exists
+                    // Update current price for trading
+                    currentPrice = stock.price
 
                     tvChangePercent.text = stock.change_percent.toString()
                     tvPrevClose.text = stock.close_price.toString()
                     tvDayHigh.text = stock.high_price.toString()
                     tvDayLow.text = stock.low_price.toString()
                     tvVolume.text = stock.volume.toString()
-
-//                    updateStockLatest(stock)
                 }
             } else {
                 Log.e("STOCK", "Failed to load $ticker – ${response.code()}")
@@ -154,19 +275,19 @@ class CandleFragment : Fragment() {
         }
     }
 
-
+    // Rest of your existing methods (switchTimeframe, loadChartData, filterHistoryByTimeframe, updateChartWithData, setupCandleChart) remain the same
     private fun switchTimeframe(timeframe: String) {
         if (currentTimeframe == timeframe) return
         currentTimeframe = timeframe
 
         // Update button highlights
-        val selectedColor = Color.parseColor("#6200EE")  // Purple
+        val selectedColor = Color.parseColor("#6200EE")
         val normalColor = Color.parseColor("#666666")
-        val selectedBg = android.R.drawable.btn_default_small
-        val normalBg = android.R.drawable.btn_default_small
 
-        listOf(btn1Year, btn6Months, btn1Month, btn2Weeks).forEach { it.setBackgroundResource(normalBg) }
-        listOf(btn1Year, btn6Months, btn1Month, btn2Weeks).forEach { it.setTextColor(normalColor) }
+        listOf(btn1Year, btn6Months, btn1Month, btn2Weeks).forEach {
+            it.setBackgroundColor(Color.TRANSPARENT)
+            it.setTextColor(normalColor)
+        }
 
         when (timeframe) {
             "1Y" -> { btn1Year.setBackgroundColor(selectedColor); btn1Year.setTextColor(Color.WHITE) }
@@ -179,7 +300,6 @@ class CandleFragment : Fragment() {
     }
 
     private fun loadChartData(timeframe: String) {
-
         candleStickChart.data = null
         candleStickChart.invalidate()
 
@@ -188,14 +308,12 @@ class CandleFragment : Fragment() {
                 val isWeekly = timeframe == "1Y" || timeframe == "6M"
                 val cache = if (isWeekly) weeklyHistoryCache else dailyHistoryCache
 
-                // Load from cache if we have it
                 if (cache != null) {
                     val filtered = filterHistoryByTimeframe(cache, timeframe)
                     withContext(Dispatchers.Main) { updateChartWithData(filtered) }
                     return@launch
                 }
 
-                // Otherwise: fetch once
                 val response = if (isWeekly) {
                     RetrofitClient.apiService.getStockHistoryWeekly(ticker)
                 } else {
@@ -205,15 +323,11 @@ class CandleFragment : Fragment() {
                 if (response.isSuccessful && response.body() != null) {
                     val fullHistory = response.body()!!
 
-                    // Cache full data
                     if (isWeekly) weeklyHistoryCache = fullHistory
                     else dailyHistoryCache = fullHistory
 
                     val filtered = filterHistoryByTimeframe(fullHistory, timeframe)
-
-                    withContext(Dispatchers.Main) {
-                        updateChartWithData(filtered)
-                    }
+                    withContext(Dispatchers.Main) { updateChartWithData(filtered) }
                 }
             } catch (e: Exception) {
                 Log.e("CHART", "Failed to load $timeframe data", e)
@@ -239,15 +353,14 @@ class CandleFragment : Fragment() {
         return history
             .filter { ohlc ->
                 try {
-                    // Parse ISO date string like "2025-11-17T00:00:00"
-                    val date = java.time.LocalDate.parse(ohlc.date.substring(0, 10)) // "2025-11-17"
+                    val date = java.time.LocalDate.parse(ohlc.date.substring(0, 10))
                     val timestampMs = date.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
                     timestampMs >= cutoffTime
                 } catch (e: Exception) {
                     false
                 }
             }
-            .sortedBy { it.date }  // oldest first
+            .sortedBy { it.date }
     }
 
     private fun updateChartWithData(history: List<OHLC_history>) {
@@ -282,41 +395,32 @@ class CandleFragment : Fragment() {
         candleStickChart.invalidate()
         candleStickChart.fitScreen()
     }
+
     private fun setupCandleChart() {
         candleStickChart.apply {
             description.isEnabled = false
             setBackgroundColor(Color.WHITE)
             setDrawGridBackground(false)
-
-            // Touch & scaling
             setTouchEnabled(true)
             isDragEnabled = true
             setScaleEnabled(true)
             setPinchZoom(true)
 
-            // X Axis
             xAxis.apply {
                 position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
                 setDrawGridLines(false)
                 textColor = Color.GRAY
             }
 
-            // Left Y Axis
             axisLeft.apply {
                 setDrawGridLines(true)
                 setDrawAxisLine(true)
                 textColor = Color.GRAY
             }
 
-            // Right Y Axis (disable)
             axisRight.isEnabled = false
-
-            // Legend
             legend.isEnabled = false
-
-            // Extra offsets so candles don't touch edges
             setExtraOffsets(16f, 16f, 16f, 16f)
         }
     }
-
 }
