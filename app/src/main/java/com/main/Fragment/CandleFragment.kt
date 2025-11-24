@@ -61,7 +61,6 @@ class CandleFragment : Fragment() {
     private lateinit var btnTrade: Button
 
     private var currentTimeframe = "1Y"
-    private var portfolioBalance = 100000.00
     private var isBuyMode = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,12 +111,14 @@ class CandleFragment : Fragment() {
         val btnSell = dialogView.findViewById<Button>(R.id.btn_sell)
         val etQuantity = dialogView.findViewById<EditText>(R.id.et_quantity)
         val tvTotalCost = dialogView.findViewById<TextView>(R.id.tv_total_cost)
-        val tvPortfolioBalance = dialogView.findViewById<TextView>(R.id.tv_portfolio_balance)
         val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
+
+        // Remove portfolio balance view since we don't need it
+        val tvPortfolioBalance = dialogView.findViewById<TextView>(R.id.tv_portfolio_balance)
+        tvPortfolioBalance.visibility = View.GONE
 
         // Update stock info with current price
         tvStockInfo.text = "$ticker - $${String.format("%.2f", currentPrice)}"
-        tvPortfolioBalance.text = "Portfolio: $${DecimalFormat("#,##0.00").format(portfolioBalance)}"
 
         // Update total cost when quantity changes
         etQuantity.addTextChangedListener(object : android.text.TextWatcher {
@@ -199,16 +200,10 @@ class CandleFragment : Fragment() {
         val total = quantity * currentPrice
 
         if (isBuyMode) {
-            if (total > portfolioBalance) {
-                Toast.makeText(requireContext(), "Insufficient funds", Toast.LENGTH_SHORT).show()
-                return
-            }
-            portfolioBalance -= total
-            Toast.makeText(requireContext(), "Bought $quantity shares of $ticker for $${String.format("%.2f", total)}", Toast.LENGTH_LONG).show()
+            // No money check - user can buy any amount
+            Toast.makeText(requireContext(), "Bought $quantity shares of $ticker", Toast.LENGTH_LONG).show()
         } else {
-            // For selling, we'd check if user has enough shares, but for simplicity we'll just add to balance
-            portfolioBalance += total
-            Toast.makeText(requireContext(), "Sold $quantity shares of $ticker for $${String.format("%.2f", total)}", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Sold $quantity shares of $ticker", Toast.LENGTH_LONG).show()
         }
 
         // Dismiss dialog
@@ -217,8 +212,7 @@ class CandleFragment : Fragment() {
             imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
 
-        // You could find the dialog and dismiss it, but for now the toast confirms the action
-        // In a real app, you'd want to properly dismiss the dialog
+        // In a real app, you'd want to properly dismiss the dialog and update portfolio
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -275,7 +269,7 @@ class CandleFragment : Fragment() {
         }
     }
 
-    // Rest of your existing methods (switchTimeframe, loadChartData, filterHistoryByTimeframe, updateChartWithData, setupCandleChart) remain the same
+    // Rest of your existing methods remain the same
     private fun switchTimeframe(timeframe: String) {
         if (currentTimeframe == timeframe) return
         currentTimeframe = timeframe

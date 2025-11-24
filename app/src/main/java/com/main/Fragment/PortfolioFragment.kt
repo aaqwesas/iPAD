@@ -15,7 +15,8 @@ class PortfolioFragment : DialogFragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        // Use the dedicated portfolio layout instead of home fragment layout
+        return inflater.inflate(R.layout.fragment_portfolio, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -35,18 +36,17 @@ class PortfolioFragment : DialogFragment() {
     }
 
     private fun setupPortfolioData() {
-        // Set default portfolio data - will be handled later from database
-
-        view?.findViewById<TextView>(R.id.txt_portfolio_value)?.text = "$100,000.00"
-        view?.findViewById<TextView>(R.id.txt_daily_pl)?.text = "+$0.00 (0.00%)"
+        // Set portfolio data - focusing on percentage performance only
+        view?.findViewById<TextView>(R.id.txt_portfolio_value)?.text = "0.00%"
+        view?.findViewById<TextView>(R.id.txt_daily_pl)?.text = "Today"
 
         // Setup RecyclerView with portfolio stocks
         setupRecyclerView()
     }
 
     private fun setupRecyclerView() {
-        val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_view_stocks)
+        val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_view_portfolio)
         // Setup your adapter here with portfolio data
-        // Will be implemented later with database data
+        // Will show stocks with allocation percentages instead of dollar values
     }
 }

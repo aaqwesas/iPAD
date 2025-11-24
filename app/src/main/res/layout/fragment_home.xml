@@ -40,8 +40,6 @@
 
         </LinearLayout>
 
-
-
         <ProgressBar
             android:id="@+id/progress_bar"
             android:layout_width="24dp"
@@ -60,7 +58,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Portfolio Value"
+                android:text="Portfolio Performance"
                 android:textSize="16sp"
                 android:textColor="@android:color/darker_gray" />
 
@@ -69,7 +67,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="$0.00"
+                android:text="0.00%"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/black" />
@@ -91,9 +89,9 @@
                     android:id="@+id/txt_daily_pl"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="+$0.00 (0.00%)"
+                    android:text="Today"
                     android:textSize="14sp"
-                    android:textColor="#4CAF50" />
+                    android:textColor="@android:color/darker_gray" />
 
             </LinearLayout>
 

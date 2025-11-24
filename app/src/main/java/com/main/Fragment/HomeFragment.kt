@@ -47,8 +47,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupPortfolioBox() {
-        // Set initial portfolio data
-        updatePortfolioData("$100,000", "+$0 (0%)")
+        // Set initial portfolio data - percentage only
+        updatePortfolioData("0.00%", "Today")
 
         // Set click listener for portfolio box
         portfolioBox.setOnClickListener {
@@ -56,17 +56,17 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun updatePortfolioData(totalValue: String, dailyPL: String) {
-        txtPortfolioValue.text = totalValue
-        txtDailyPL.text = dailyPL
+    private fun updatePortfolioData(performance: String, timePeriod: String) {
+        txtPortfolioValue.text = performance
+        txtDailyPL.text = timePeriod
 
-        // Set color based on profit/loss (green for positive, red for negative)
-        val color = if (dailyPL.startsWith("+")) {
-            resources.getColor(android.R.color.holo_green_dark, null)
-        } else {
+        // Set color based on performance (green for positive, red for negative)
+        val color = if (performance.startsWith("-")) {
             resources.getColor(android.R.color.holo_red_dark, null)
+        } else {
+            resources.getColor(android.R.color.holo_green_dark, null)
         }
-        txtDailyPL.setTextColor(color)
+        txtPortfolioValue.setTextColor(color)
     }
 
     private fun showPortfolioDialog() {
