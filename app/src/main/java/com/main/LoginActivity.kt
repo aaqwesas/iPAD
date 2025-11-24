@@ -64,9 +64,9 @@ class LoginActivity : AppCompatActivity() {
             handleTraditionalLogin()
         }
 
-        binding.googleSignInButton.setOnClickListener {
-            signInWithGoogle()
-        }
+//        binding.googleSignInButton.setOnClickListener {
+//            signInWithGoogle()
+//        }
 
         binding.signUpPrompt.setOnClickListener {
             val intent = Intent(this, SignupActivity::class.java)

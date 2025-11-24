@@ -15,19 +15,26 @@ class SignupActivity : AppCompatActivity() {
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
+        // Toolbar was removed from layout, so remove these lines:
+        // setSupportActionBar(binding.toolbar)
+        // supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        // supportActionBar?.setDisplayShowHomeEnabled(true)
 
         binding.signupButton.setOnClickListener {
             handleSignup()
         }
+
+        // Add click listener for login prompt
+        binding.loginPrompt.setOnClickListener {
+            finish() // Go back to login activity
+        }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressedDispatcher.onBackPressed()
-        return true
-    }
+    // Remove onSupportNavigateUp since we don't have toolbar anymore
+    // override fun onSupportNavigateUp(): Boolean {
+    //     onBackPressedDispatcher.onBackPressed()
+    //     return true
+    // }
 
     private fun handleSignup() {
         val email = binding.emailEditTextSignup.text.toString().trim()
@@ -49,19 +56,32 @@ class SignupActivity : AppCompatActivity() {
             return
         }
 
-        // Save the new user account to a simulated database (SharedPreferences)
-        val userAccounts = getSharedPreferences("UserAccounts", Context.MODE_PRIVATE)
-        
-        if (userAccounts.contains(email)) {
-            Toast.makeText(this, "An account with this email already exists.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        userAccounts.edit()
-            .putString(email, password)
-            .apply()
+        // Show loading state
+        binding.signupProgressOverlay.visibility = android.view.View.VISIBLE
+        binding.signupButton.isEnabled = false
 
-        Toast.makeText(this, "Sign-up successful! Please log in.", Toast.LENGTH_LONG).show()
-        finish() // Close the SignupActivity and return to the LoginActivity
+        // Simulate API call delay
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            // Save the new user account to a simulated database (SharedPreferences)
+            val userAccounts = getSharedPreferences("UserAccounts", Context.MODE_PRIVATE)
+
+            if (userAccounts.contains(email)) {
+                Toast.makeText(this, "An account with this email already exists.", Toast.LENGTH_SHORT).show()
+                binding.signupProgressOverlay.visibility = android.view.View.GONE
+                binding.signupButton.isEnabled = true
+                return@postDelayed
+            }
+
+            userAccounts.edit()
+                .putString(email, password)
+                .apply()
+
+            // Hide loading state
+            binding.signupProgressOverlay.visibility = android.view.View.GONE
+            binding.signupButton.isEnabled = true
+
+            Toast.makeText(this, "Sign-up successful! Please log in.", Toast.LENGTH_LONG).show()
+            finish() // Close the SignupActivity and return to the LoginActivity
+        }, 1500) // 1.5 second delay to show the loading state
     }
 }
