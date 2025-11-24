@@ -7,9 +7,9 @@ from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from response_type import RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest
+from response_type import PortfolioResponse, PortfolioUpdate, RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest, UserHoldingResponse
 from database import get_db_session, create_tables
-from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert
+from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert, UserHolding, UserPortfolio
 from utils import create_data_fetcher, setup_database, send_fcm_notification
 
 import firebase_admin
@@ -79,6 +79,57 @@ async def get_all_symbols():
         symbols = db.exec(stmt).all()
         return symbols
 
+@app.get("/users/{user_id}/portfolio", response_model=PortfolioResponse)
+async def get_portfolio_value(user_id: int):
+    with get_db_session() as db:
+        portfolio = db.exec(
+            select(UserPortfolio)
+            .where(UserPortfolio.user_id == user_id)
+        ).first()
+        
+        if not portfolio:
+            # Return default value if no portfolio exists
+            return PortfolioResponse(value=0.0)
+        
+        return PortfolioResponse(value=portfolio.value)
+
+# 2. Update portfolio value
+@app.put("/users/{user_id}/portfolio", response_model=PortfolioResponse)
+async def update_portfolio_value(user_id: int, update: PortfolioUpdate):
+    with get_db_session() as db:
+        portfolio = db.exec(
+            select(UserPortfolio)
+            .where(UserPortfolio.user_id == user_id)
+        ).first()
+        
+        if portfolio:
+            # Update existing portfolio
+            portfolio.value = update.value
+        else:
+            # Create new portfolio if doesn't exist
+            portfolio = UserPortfolio(user_id=user_id, value=update.value)
+            db.add(portfolio)
+        
+        db.commit()
+        db.refresh(portfolio)
+        return PortfolioResponse(value=portfolio.value)
+
+
+@app.get("/users/{user_id}/holdings", response_model=List[UserHoldingResponse])
+async def get_user_holdings(user_id: int):
+    with get_db_session() as db:
+        # Query all holdings for this user
+        holdings = db.exec(
+            select(UserHolding.stock_ticker, UserHolding.quantity)
+            .where(UserHolding.user_id == user_id)
+        ).all()
+        
+        if not holdings:
+            return []  
+        
+        # Convert to response model
+        return [UserHoldingResponse(stock_ticker=ticker, quantity=quantity) 
+                for ticker, quantity in holdings]
 
 
 @app.post("/api/generate-token", response_model=RegisterResponse)

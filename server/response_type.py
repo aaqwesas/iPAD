@@ -4,6 +4,18 @@ from datetime import datetime
 class TokenResponse(BaseModel):
     token: str
     message: str
+    
+    
+class PortfolioUpdate(BaseModel):
+    value: float
+
+class PortfolioResponse(BaseModel):
+    value: float
+    
+
+class UserHoldingResponse(BaseModel):
+    stock_ticker: str
+    quantity: float
 
 class Stock(BaseModel):
     symbol: str

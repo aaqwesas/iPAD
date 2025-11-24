@@ -9,6 +9,22 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     fcm_token: Optional[str] = None
 
+
+
+class UserPortfolio(SQLModel, table=True):
+    __tablename__: str = "user_portfolios"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    value: float
+    
+    
+class UserHolding(SQLModel, table=True):
+    __tablename__ = "user_holdings"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    stock_ticker: str = Field(index=True)
+    quantity: float
+
 class StockPrice(SQLModel, table=True):
     __tablename__: str = "stock_prices"
 
