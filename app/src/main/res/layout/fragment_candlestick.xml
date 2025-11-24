@@ -4,33 +4,60 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
     tools:context="com.main.Fragment.CandleFragment">
 
-    <TextView
-        android:id="@+id/stock_name"
-        android:layout_width="wrap_content"
+    <!-- Header Section with Back Button -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tesla"
-        android:textSize="20sp"
-        android:layout_marginTop="20dp"/>
+        android:orientation="horizontal"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/ticket"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TSLA"
-        android:layout_marginTop="5dp"/>
+        <!-- Back Button (TOP LEFT) -->
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Go back"
+            android:padding="12dp" />
 
-    <TextView
-        android:id="@+id/percentage_change"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="+10%"
-        android:layout_marginTop="5dp"/>
+        <!-- Stock Info Container -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:layout_marginStart="16dp">
 
+            <TextView
+                android:id="@+id/stock_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tesla"
+                android:textSize="20sp"/>
 
-    <!--        candle chart view-->
+            <TextView
+                android:id="@+id/ticket"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TSLA"
+                android:layout_marginTop="5dp"/>
+
+            <TextView
+                android:id="@+id/percentage_change"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+10%"
+                android:layout_marginTop="5dp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Candle Chart Section -->
     <LinearLayout
         android:id="@+id/chart_section"
         android:layout_width="match_parent"
@@ -38,14 +65,6 @@
         android:orientation="vertical"
         android:gravity="center_horizontal"
         android:padding="16dp">
-
-<!--        &lt;!&ndash; Candle chart placeholder &ndash;&gt;-->
-<!--        <FrameLayout-->
-<!--            android:id="@+id/candle_chart_container"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="250dp"-->
-<!--            android:background="@drawable/chart_placeholder_bg"-->
-<!--            android:layout_marginBottom="12dp" />-->
 
         <com.github.mikephil.charting.charts.CandleStickChart
             android:id="@+id/candle_stick_chart"
@@ -99,7 +118,7 @@
 
     </LinearLayout>
 
-
+    <!-- Stats Section -->
     <LinearLayout
         android:id="@+id/stat_section"
         android:layout_width="match_parent"
@@ -134,6 +153,7 @@
 
         </LinearLayout>
 
+        <!-- Stat 2 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -158,6 +178,7 @@
 
         </LinearLayout>
 
+        <!-- Stat 3 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -182,6 +203,7 @@
 
         </LinearLayout>
 
+        <!-- Stat 4 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -206,9 +228,6 @@
 
         </LinearLayout>
 
-        <!-- Repeat similar blocks for Day Low, Day High, Volume -->
     </LinearLayout>
-
-
 
 </LinearLayout>

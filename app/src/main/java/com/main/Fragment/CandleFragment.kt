@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.graphics.Paint
 import android.widget.Button
+import android.widget.ImageButton
 
 class CandleFragment : Fragment() {
 
@@ -70,15 +71,28 @@ class CandleFragment : Fragment() {
         companyName = arguments?.getString("company_name") ?: ticker
     }
 
+    private fun setupBackButton(backButton: ImageButton) {
+        backButton.setOnClickListener {
+            // Go back to previous fragment or close activity
+            if (parentFragmentManager.backStackEntryCount > 0) {
+                parentFragmentManager.popBackStack()
+            } else {
+                requireActivity().onBackPressed()
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_portfolio, container, false)
+        val view = inflater.inflate(R.layout.fragment_candlestick, container, false)
 
         candleStickChart = view.findViewById(R.id.candle_stick_chart)
+        val btnBack = view.findViewById<ImageButton>(R.id.btn_back)
         setupCandleChart()
+        setupBackButton(btnBack)
 //        loadMockTeslaData()
 //        loadStockHistoryChart()
 
