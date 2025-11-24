@@ -142,7 +142,7 @@ class AlertsFragment : Fragment() {
                     val apiStocks = response.body() ?: emptyList()
 
                     // Create formatted list: "Company Name (TICKER)"
-                    val stockDisplayList = apiStocks.map { stock ->
+                    val stockDisplayList = listOf("Customized portfolio") + apiStocks.map { stock ->
                         "${stock.symbol}"
                     }
 
