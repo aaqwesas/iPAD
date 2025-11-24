@@ -7,10 +7,10 @@ from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from response_type import AddHoldingRequest, PortfolioResponse, PortfolioUpdate, RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest, UserHoldingResponse
+from response_type import AddHoldingRequest, PortfolioResponse, PortfolioUpdate, RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest, UserHoldingResponse, MappingResponse
 from database import get_db_session, create_tables
-from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert, UserHolding, UserPortfolio
-from utils import create_data_fetcher, setup_database, send_fcm_notification
+from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert, UserHolding, UserPortfolio, NameTickerMap
+from utils import create_data_fetcher, setup_database, send_fcm_notification, TICKERS
 
 import firebase_admin
 from firebase_admin import credentials
@@ -25,9 +25,7 @@ create_tables()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    TICKERS = ["AAPL", "TSLA", "VOO", "3115.HK"]
     
-
     data_fetcher = create_data_fetcher(tickers=TICKERS)
     
     try:
@@ -230,7 +228,15 @@ def verify_token_endpoint(token_data: TokenVerify):
     else:
         return {"valid": False, "message": "Invalid token"}
     
-    
+@app.get("/api/companyname/{symbol}", response_model=MappingResponse)
+def get_company_name(symbol):
+    """Get company name by symbol"""
+    with get_db_session() as db:
+        statement = select(distinct(NameTickerMap.companyName)).where(NameTickerMap.symbol == symbol.upper())
+        get_company_name = db.exec(statement).first()
+
+        return MappingResponse(companyName=get_company_name)
+
 
 @app.get("/api/stocks", response_model=List[Stock])
 def get_stocks():
@@ -280,6 +286,7 @@ def get_stock(symbol: str):
         statement = (
             select(StockPrice)
             .where(StockPrice.symbol == symbol.upper())
+            .order_by(StockPrice.timestamp.desc())
         )
         stock = db.exec(statement).first()
         if not stock:

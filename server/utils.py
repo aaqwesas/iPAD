@@ -7,6 +7,7 @@ from models import (
     StockHistoricalData,
     StockHistoricalData_weekly,
     PriceAlert,
+    NameTickerMap,
 )
 import datetime
 from firebase_admin import messaging
@@ -15,7 +16,7 @@ from sqlalchemy import and_
 import yfinance as yf
 import pandas as pd
 
-
+TICKERS = ["AAPL", "TSLA", "VOO", "3115.HK"]
 
 
 def clear_stock_history() -> None:
@@ -35,7 +36,7 @@ def clear_stock_history() -> None:
 
 
 def setup_default_stock_data() -> None:
-    tickers = ["AAPL", "TSLA", "VOO", "3115.HK"]
+    tickers = TICKERS
     with get_db_session() as db:
         for ticker in tickers:
             data = fetch_1y_stock_data(ticker)
@@ -187,8 +188,8 @@ async def fetch_and_store_stock_data(tickers: list[str]):
                     process_ticker,
                     ticker,
                     db,
-                    "1m",
                     "1d",
+                    "2d",
                 )  # type: ignore
 
             # Sleep for remainder of interval
@@ -238,7 +239,7 @@ async def stock_price_watcher(tickers: list[str]):
                     # 1. Fetch + store new price (blocking → run in thread)
                     loop = asyncio.get_event_loop()
                     result = await loop.run_in_executor(
-                        None, process_ticker, ticker, db, "1m", "1d"
+                        None, process_ticker, ticker, db, "1d", "2d"
                     )
 
                     if not result:
@@ -319,11 +320,20 @@ async def stock_price_watcher(tickers: list[str]):
 
 def insert_stock_data():
     """Download and insert latest stock data as new records"""
-    tickers = ["AAPL", "TSLA", "VOO", "3115.HK"]
+    tickers = TICKERS
 
     with get_db_session() as db:
         for ticker in tickers:
-            process_ticker(ticker=ticker, db=db, period="5d", interval="1m")
+            process_ticker(ticker=ticker, db=db, period="5d", interval="1d")
+            tickerInfo = yf.Ticker(ticker)
+            process_ticker_name(ticker=ticker, companyName=tickerInfo.info['longName'], db=db)
+            
+def process_ticker_name(ticker, companyName, db):
+    db.add(NameTickerMap(
+        symbol = ticker.upper(),
+        companyName = companyName
+    ))
+    db.commit()
 
 
 def setup_database():

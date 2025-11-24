@@ -3,7 +3,8 @@ from datetime import datetime
 
 
 
-
+class MappingResponse(BaseModel):
+    companyName: str
 
 class TokenResponse(BaseModel):
     token: str

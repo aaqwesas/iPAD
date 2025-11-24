@@ -74,3 +74,10 @@ class PriceAlert(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     triggered_at: Optional[datetime] = None
     triggered_price: Optional[float] = None
+
+class NameTickerMap(SQLModel, table=True):
+    __tablename__: str = "company_name"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    symbol: str = Field(index=True)
+    companyName: str
