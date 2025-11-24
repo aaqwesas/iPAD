@@ -1,5 +1,8 @@
 package com.main.api
 
+import com.main.Data.PortfolioResponse
+import com.main.Data.PortfolioUpdate
+import com.main.Data.UserHoldingResponse
 import retrofit2.Response
 import retrofit2.http.*
 import com.main.models.RegisterResponse
@@ -45,6 +48,18 @@ interface StockApiService {
     suspend fun checkhealth(): Response<Map<String, String>>
 
     @GET("api/symbols")
-    suspend fun  getSymbols(): Response<List<String>>
+    suspend fun getSymbols(): Response<List<String>>
 
+    // Portfolio endpoints
+    @GET("api/users/{user_id}/holdings")
+    suspend fun getUserHoldings(@Path("user_id") userId: Int): Response<List<UserHoldingResponse>>
+
+    @GET("api/users/{user_id}/portfolio")
+    suspend fun getPortfolioValue(@Path("user_id") userId: Int): Response<PortfolioResponse>
+
+    @PUT("api/users/{user_id}/portfolio")
+    suspend fun updatePortfolioValue(
+        @Path("user_id") userId: Int,
+        @Body update: PortfolioUpdate
+    ): Response<PortfolioResponse>
 }
