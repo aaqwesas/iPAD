@@ -7,7 +7,7 @@ from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from response_type import TokenResponse, TokenVerify, Stock, StockCreate, StockHistorical
+from response_type import Stock, StockCreate, StockHistorical
 from database import get_db_session, create_tables
 from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert
 from utils import create_data_fetcher, setup_database, send_fcm_notification
@@ -80,36 +80,6 @@ async def get_all_symbols():
         symbols = db.exec(stmt).all()
         return symbols
 
-@app.post("/api/generate-token", response_model=TokenResponse)
-def generate_token_endpoint():
-    """Generate a new user token"""
-    token = generate_token()
-
-    with get_db_session() as db:
-        statement = select(User).where(User.token == token)
-        existing_user = db.exec(statement).first()
-        if existing_user:
-            token = generate_token()
-            statement = select(User).where(User.token == token)
-            existing_user = db.exec(statement).first()
-
-
-        db_user = User(token=token)
-        db.add(db_user)
-        
-    return {"token": token, "message": "Token generated successfully"}
-
-
-@app.post("/api/verify-token")
-def verify_token_endpoint(token_data: TokenVerify):
-    """Verify if a token exists in the database"""
-    with get_db_session() as db:
-        statement = select(User).where(User.token == token_data.token)
-        user = db.exec(statement).first()
-    if user:
-        return {"valid": True, "message": "Token is valid"}
-    else:
-        return {"valid": False, "message": "Invalid token"}
     
     
 
