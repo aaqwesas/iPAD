@@ -7,7 +7,7 @@ from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from response_type import TokenResponse, TokenVerify, Stock, StockCreate, StockHistorical
+from response_type import RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest
 from database import get_db_session, create_tables
 from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert
 from utils import create_data_fetcher, setup_database, send_fcm_notification
@@ -80,24 +80,41 @@ async def get_all_symbols():
         symbols = db.exec(stmt).all()
         return symbols
 
-@app.post("/api/generate-token", response_model=TokenResponse)
-def generate_token_endpoint():
-    """Generate a new user token"""
-    token = generate_token()
 
+
+@app.post("/api/generate-token", response_model=RegisterResponse)
+def register(data: RegisterRequest):
+    email = data.email.strip().lower()
+    
     with get_db_session() as db:
-        statement = select(User).where(User.token == token)
-        existing_user = db.exec(statement).first()
-        if existing_user:
-            token = generate_token()
-            statement = select(User).where(User.token == token)
-            existing_user = db.exec(statement).first()
+        # Check if user exists by "token" (which is email)
+        user = db.exec(select(User).where(User.token == email)).first()
+        if not user:
+            user = User(token=email)  # ← token = email
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return {"message": "User created", "is_new": True}
+        else:
+            return {"message": "Welcome back", "is_new": False}
+
+# def generate_token_endpoint():
+#     """Generate a new user token"""
+#     token = generate_token()
+
+#     with get_db_session() as db:
+#         statement = select(User).where(User.token == token)
+#         existing_user = db.exec(statement).first()
+#         if existing_user:
+#             token = generate_token()
+#             statement = select(User).where(User.token == token)
+#             existing_user = db.exec(statement).first()
 
 
-        db_user = User(token=token)
-        db.add(db_user)
+#         db_user = User(token=token)
+#         db.add(db_user)
         
-    return {"token": token, "message": "Token generated successfully"}
+#     return {"token": token, "message": "Token generated successfully"}
 
 
 @app.post("/api/verify-token")
@@ -191,23 +208,41 @@ def health_check():
 
 
 @app.post("/api/set-fcm-token")
-async def set_fcm_token(token: str, user_token: str):
+def set_fcm_token(data: FCMUpdate):
+    email = data.email.strip().lower()
+    
     with get_db_session() as db:
-        user = db.exec(select(User).where(User.token == user_token)).first()
+        # ← token column now holds the email!
+        user = db.exec(select(User).where(User.token == email)).first()
         if not user:
-            raise HTTPException(404, "User not found")
-        user.fcm_token = token
+            raise HTTPException(404, "User not found – register first")
+        
+        user.fcm_token = data.fcm_token
         db.add(user)
         db.commit()
-    return {"status": "fcm token saved"}
+    
+    return {"status": "ok"}
 
 @app.post("/api/alerts")
-async def create_alert(alert: dict):  # or use Pydantic model
-    # validate user_token, etc.
+def create_alert(req: CreateAlertRequest):
+    email = req.email.strip().lower()
+    
     with get_db_session() as db:
-        db_alert = PriceAlert(**alert, user_id=User.id)
-        db.add(db_alert)
+        user = db.exec(select(User).where(User.token == email)).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        alert = PriceAlert(
+            user_id=user.id,
+            user_token=email,       
+            symbol=req.symbol.upper(),
+            target_price=req.target_price,
+            condition=req.condition
+        )
+        db.add(alert)
         db.commit()
+        db.refresh(alert)
+    
     return {"status": "alert created"}
 
 if __name__ == "__main__":

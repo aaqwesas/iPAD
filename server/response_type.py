@@ -42,3 +42,20 @@ class StockCreate(BaseModel):
 
 class TokenVerify(BaseModel):
     token: str
+
+class RegisterRequest(BaseModel):
+    email: str
+
+class RegisterResponse(BaseModel):
+    message: str
+    is_new: bool
+
+class FCMUpdate(BaseModel):
+    email: str
+    fcm_token: str
+
+class CreateAlertRequest(BaseModel):
+    email: str
+    symbol: str
+    target_price: float
+    condition: str

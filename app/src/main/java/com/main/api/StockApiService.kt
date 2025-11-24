@@ -2,7 +2,8 @@ package com.main.api
 
 import retrofit2.Response
 import retrofit2.http.*
-import com.main.models.TokenResponse
+import com.main.models.RegisterResponse
+import com.main.models.RegisterRequest
 import com.main.models.TokenVerifyRequest
 import com.main.models.Stock
 import com.main.models.OHLC
@@ -11,7 +12,7 @@ import com.main.models.VerifyTokenResponse
 
 interface StockApiService {
     @POST("api/generate-token")
-    suspend fun generateToken(): Response<TokenResponse>
+    suspend fun registerUser(@Body request: RegisterRequest): Response<RegisterResponse>
 
     @POST("api/verify-token")
     suspend fun verifyToken(@Body tokenData: TokenVerifyRequest): Response<VerifyTokenResponse>

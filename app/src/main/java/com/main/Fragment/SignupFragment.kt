@@ -68,31 +68,32 @@ class SignupFragment : Fragment() {
     }
 
     private fun generateTokenFromServer() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitClient.apiService.generateToken()
-                if (response.isSuccessful) {
-                    val token = response.body()?.token
-                    if (!token.isNullOrEmpty()) {
-                        withContext<Unit>(Dispatchers.Main) {
-                            tvGeneratedToken.text = token
-                            llTokenSection.visibility = View.VISIBLE
-
-                            // Save the token
-                            sharedPreferences.edit { putString("user_token", token) }
-                        }
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Failed to generate token", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+        //no longer needed
+//        CoroutineScope(Dispatchers.IO).launch {
+//            try {
+//                val response = RetrofitClient.apiService.generateToken()
+//                if (response.isSuccessful) {
+//                    val token = response.body()?.token
+//                    if (!token.isNullOrEmpty()) {
+//                        withContext<Unit>(Dispatchers.Main) {
+//                            tvGeneratedToken.text = token
+//                            llTokenSection.visibility = View.VISIBLE
+//
+//                            // Save the token
+//                            sharedPreferences.edit { putString("user_token", token) }
+//                        }
+//                    }
+//                } else {
+//                    withContext(Dispatchers.Main) {
+//                        Toast.makeText(context, "Failed to generate token", Toast.LENGTH_SHORT).show()
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                withContext(Dispatchers.Main) {
+//                    Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//        }
     }
 
     private fun copyTokenToClipboard(token: String) {

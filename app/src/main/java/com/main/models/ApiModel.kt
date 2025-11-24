@@ -1,8 +1,13 @@
 package com.main.models
 
-data class TokenResponse(
-    val token: String,
-    val message: String
+data class RegisterResponse(
+    val message: String,
+    val is_new: Boolean
+    // val email: String? = null  // optional, if you return it
+)
+
+data class RegisterRequest(
+    val email: String
 )
 
 data class TokenVerifyRequest(
