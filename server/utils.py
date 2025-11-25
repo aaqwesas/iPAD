@@ -16,7 +16,7 @@ from sqlalchemy import and_
 import yfinance as yf
 import pandas as pd
 
-TICKERS = ["AAPL", "TSLA", "VOO", "3115.HK"]
+TICKERS = ["AAPL", "TSLA", "VOO", "3115.HK", "NVDA", "BBAI", "NVO", "SOXL", "QBTZ", "GOOG"]
 
 
 def clear_stock_history() -> None:
