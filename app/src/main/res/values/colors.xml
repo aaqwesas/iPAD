@@ -11,4 +11,6 @@
     <color name="purple_500">#9C27B0</color>
     <color name="purple_200">#E9D4FF</color>
     <color name="colorPrimary">#667eea</color>
+    <color name="chart_line_color">#4CAF50</color>
+    <color name="chart_fill_color">#204CAF50</color>
 </resources>

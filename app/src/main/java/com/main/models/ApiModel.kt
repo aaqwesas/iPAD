@@ -65,3 +65,22 @@ data class OHLC_history(
     val close_price: Double,
     val volume: Int
 )
+
+
+data class AddHistoryResponse(
+    val message: String,
+    val id: Int?,
+    val value: Float,
+    val timestamp: String
+)
+
+
+data class PortfolioHistoryResponse(
+    val value: Float,
+    val timestamp: String
+)
+
+
+data class PortfolioValueResponse(
+    val value: Float
+)

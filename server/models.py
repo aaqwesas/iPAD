@@ -1,3 +1,4 @@
+from sqlalchemy.sql.roles import TruncatedLabelRole
 from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
@@ -24,6 +25,14 @@ class UserHolding(SQLModel, table=True):
     token: str = Field(foreign_key="users.token")
     stock_ticker: str = Field(index=True)
     quantity: float
+
+
+class PortfolioHistory(SQLModel, table=True):
+    __tablename__ = "portfolio_history"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    token: str = Field(foreign_key="users.token")
+    value: float
+    timestamp: datetime = Field(default_factory=lambda: datetime.now())
 
 
 class StockPrice(SQLModel, table=True):
@@ -87,4 +96,3 @@ class NameTickerMap(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     symbol: str = Field(index=True)
     companyName: str
-

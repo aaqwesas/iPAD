@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from response_type import (
     AddHoldingRequest,
+    PortfolioHistoryResponse,
     PortfolioResponse,
     PortfolioUpdate,
     RegisterResponse,
@@ -32,6 +33,7 @@ from models import (
     UserHolding,
     UserPortfolio,
     NameTickerMap,
+    PortfolioHistory,
 )
 from utils import (
     _portfolio_value,
@@ -78,6 +80,53 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+@app.post("/users/{token}/add_history")
+async def add_portfolio_history(token: str, value: float):
+    with get_db_session() as db:
+        new_history = PortfolioHistory(token=token, value=value)
+
+        db.add(new_history)
+        db.commit()
+        db.refresh(new_history)
+
+        return {
+            "message": "Portfolio history added successfully",
+            "id": new_history.id,
+            "value": new_history.value,
+            "timestamp": new_history.timestamp,
+        }
+
+
+@app.get(
+    "/users/{token}/history", response_model=List[PortfolioHistoryResponse]
+)  # Changed path and response_model
+async def get_portfolio_history(token: str, limit: int = 30):
+    with get_db_session() as db:
+        statement = (
+            select(
+                PortfolioHistory.value, PortfolioHistory.timestamp
+            )  # Select both fields
+            .where(PortfolioHistory.token == token)
+            .order_by(PortfolioHistory.timestamp.desc())
+            .limit(limit=limit)
+        )
+
+        # Fetch the raw results (tuples of value, timestamp)
+        raw_results = db.exec(statement).all()
+
+        # Convert the raw results to the response model format
+        # Assuming `timestamp` from the DB is a datetime object that needs to be stringified
+        history_list = [
+            PortfolioHistoryResponse(
+                value=result.value,
+                timestamp=result.timestamp.isoformat(),  # Convert datetime to ISO string
+            )
+            for result in raw_results
+        ]
+
+        return history_list  # Return the list of response model objects
 
 
 @app.get("/test-push")
@@ -145,7 +194,7 @@ async def update_portfolio_value(token: str, update: PortfolioUpdate):
 
 
 @app.get("/users/{token}/percentage_change")
-async def get_portfolio_change(token: str):
+async def get_portfolio_change(token: str) -> float:
     with get_db_session() as db:
         new_portfolio_val = _portfolio_value(db=db, token=token)
         portfolio = db.exec(
@@ -162,6 +211,8 @@ async def get_portfolio_change(token: str):
                 return 0
             else:
                 return 100
+    if new_portfolio_val == old_val:
+        return 0.0
 
     percentage_change = ((new_portfolio_val - old_val) / old_val) * 100
 
@@ -213,7 +264,7 @@ async def add_user_holding(token: str, request: AddHoldingRequest):
         ).first()
 
         current_qty = holding.quantity if holding else 0.0
-        
+
         # Validate the trade
         _validate_trade(current_qty, request.quantity)
 
@@ -224,16 +275,15 @@ async def add_user_holding(token: str, request: AddHoldingRequest):
                 db.delete(holding)
                 db.commit()
             return UserHoldingResponse(stock_ticker=request.stock_ticker, quantity=0.0)
-        
+
         elif holding:
             holding.quantity = new_qty
             db.commit()
             db.refresh(holding)
             return UserHoldingResponse(
-                stock_ticker=holding.stock_ticker,
-                quantity=holding.quantity
+                stock_ticker=holding.stock_ticker, quantity=holding.quantity
             )
-        
+
         else:
             new_holding = UserHolding(
                 token=token,
@@ -244,9 +294,9 @@ async def add_user_holding(token: str, request: AddHoldingRequest):
             db.commit()
             db.refresh(new_holding)
             return UserHoldingResponse(
-                stock_ticker=new_holding.stock_ticker,
-                quantity=new_holding.quantity
+                stock_ticker=new_holding.stock_ticker, quantity=new_holding.quantity
             )
+
 
 @app.post("/api/generate-token", response_model=RegisterResponse)
 def register(data: RegisterRequest):

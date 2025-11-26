@@ -4,6 +4,7 @@ import com.main.Data.AddHoldingRequest
 import com.main.Data.PortfolioResponse
 import com.main.Data.PortfolioUpdate
 import com.main.Data.UserHoldingResponse
+import com.main.models.AddHistoryResponse
 import retrofit2.Response
 import retrofit2.http.*
 import com.main.models.RegisterResponse
@@ -15,6 +16,8 @@ import com.main.models.SimpleResponse
 import com.main.models.Stock
 import com.main.models.OHLC
 import com.main.models.OHLC_history
+import com.main.models.PortfolioHistoryResponse
+import com.main.models.PortfolioValueResponse
 import com.main.models.VerifyTokenResponse
 
 interface StockApiService {
@@ -74,4 +77,16 @@ interface StockApiService {
 
     @GET("users/{token}/holding")
     suspend fun getUserHolding(@Path("token") token: String, @Query("ticker") ticker: String): Response<UserHoldingResponse>
+
+    @POST("users/{token}/add_history")
+    suspend fun addPortfolioHistory(
+        @Path("token") token: String,
+        @Body value: Float
+    ): Response<AddHistoryResponse>
+
+    @GET("users/{token}/history")
+    suspend fun getPortfolioHistory(
+        @Path("token") token: String,
+        @Query("limit") limit: Int = 30
+    ): Response<List<PortfolioHistoryResponse>>
 }

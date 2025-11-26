@@ -31,12 +31,14 @@ TICKERS = [
     "GOOG",
 ]
 
+
 def _validate_trade(current_qty: float, trade_qty: float) -> None:
     if trade_qty < 0 and current_qty < abs(trade_qty):
         raise HTTPException(
             status_code=400,
-            detail=f"Insufficient shares. You have {current_qty} shares, trying to sell {abs(trade_qty)}"
+            detail=f"Insufficient shares. You have {current_qty} shares, trying to sell {abs(trade_qty)}",
         )
+
 
 def clear_stock_history() -> None:
     """Clear all existing stock historical data"""
@@ -166,7 +168,9 @@ def preprocess_data(ticker: str, data: pd.DataFrame) -> StockPrice:
     return stock_record
 
 
-def process_ticker(ticker: str, db: Session, interval: str, period: str) -> StockPrice | None:
+def process_ticker(
+    ticker: str, db: Session, interval: str, period: str
+) -> StockPrice | None:
     data: pd.DataFrame = yf.download(
         tickers=ticker,
         period=period,
@@ -184,7 +188,6 @@ def process_ticker(ticker: str, db: Session, interval: str, period: str) -> Stoc
     db.add(stock_record)
 
     return stock_record
-
 
 
 async def fetch_and_store_stock_data(tickers: list[str]):
@@ -320,18 +323,16 @@ async def stock_price_watcher(tickers: list[str]):
         elapsed = asyncio.get_event_loop().time() - start_time
         await asyncio.sleep(max(0, 60 - elapsed))
 
+
 def _portfolio_value(db: Session, token: str) -> float:
     # Get all holdings for the user
-    holdings = db.exec(
-        select(UserHolding)
-        .where(UserHolding.token == token)
-    ).all()
-    
+    holdings = db.exec(select(UserHolding).where(UserHolding.token == token)).all()
+
     if not holdings:
         return 0.0
-    
+
     portfolio_val = 0.0
-    
+
     for holding in holdings:
         # Get latest price for each stock
         latest_price = db.exec(
@@ -340,11 +341,12 @@ def _portfolio_value(db: Session, token: str) -> float:
             .order_by(StockPrice.timestamp.desc())
             .limit(1)
         ).first()
-        
+
         if latest_price:
             portfolio_val += holding.quantity * latest_price.price
-    
+
     return portfolio_val
+
 
 def insert_stock_data():
     """Download and insert latest stock data as new records"""

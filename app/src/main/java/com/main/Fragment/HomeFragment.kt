@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -46,7 +47,7 @@ class HomeFragment : Fragment() {
 
         // Initialize SharedPreferences
         sharedPreferences = requireContext().getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
-
+        print((sharedPreferences))
         setupPortfolioBox()
         loadStockData()
         loadPortfolioData() // Load actual portfolio data
@@ -66,11 +67,8 @@ class HomeFragment : Fragment() {
 
     private fun loadPortfolioData() {
         val token = sharedPreferences.getString("user_email", null)
-
-        if (token == null) {
-            // User not logged in, keep default values
+            ?:
             return
-        }
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -107,8 +105,14 @@ class HomeFragment : Fragment() {
     }
 
     private fun showPortfolioDialog() {
-        val portfolioFragment = PortfolioFragment()
-        portfolioFragment.show(parentFragmentManager, "PortfolioDialog")
+        val token = sharedPreferences.getString("user_email", null)
+        if (token != null){
+            val portfolioFragment = PortfolioFragment.newInstance(token)
+            portfolioFragment.show(parentFragmentManager, "PortfolioDialog")
+        }else{
+            Toast.makeText(context, "Please log in to view portfolio", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     private fun setupRecyclerView(tickerToNameMap: Map<String, String>) {
