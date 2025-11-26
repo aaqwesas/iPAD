@@ -122,6 +122,7 @@ async def get_portfolio_change(token: str):
             select(UserPortfolio)
             .where(UserPortfolio.token == token)
         ).first()
+        print(new_portfolio_val, portfolio)
         if not portfolio:
             return 0
         

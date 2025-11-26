@@ -197,8 +197,8 @@ async def fetch_and_store_stock_data(tickers: list[str]):
                     process_ticker,
                     ticker,
                     db,
+                    "1m",
                     "1d",
-                    "2d",
                 )  # type: ignore
 
             # Sleep for remainder of interval
@@ -317,26 +317,28 @@ async def stock_price_watcher(tickers: list[str]):
         await asyncio.sleep(max(0, 60 - elapsed))
 
 def _portfolio_value(db: Session, token: str) -> float:
-    statement = select(StockPrice).order_by(StockPrice.timestamp.desc())
-    stocks = db.exec(statement).all()
-    
+    # Get all holdings for the user
     holdings = db.exec(
-        select(UserHolding.stock_ticker, UserHolding.quantity)
+        select(UserHolding)
         .where(UserHolding.token == token)
     ).all()
     
-    temp_dict = {
-        ticker: price 
-        for ticker, price in holdings
-    }
+    if not holdings:
+        return 0.0
     
-    portfolio_val = 0
+    portfolio_val = 0.0
     
-    for stock in stocks:
-        if stock.symbol not in temp_dict:
-            continue
-        portfolio_val += temp_dict[stock.symbol] * stock.price
-            
+    for holding in holdings:
+        # Get latest price for each stock
+        latest_price = db.exec(
+            select(StockPrice)
+            .where(StockPrice.symbol == holding.stock_ticker)
+            .order_by(StockPrice.timestamp.desc())
+            .limit(1)
+        ).first()
+        
+        if latest_price:
+            portfolio_val += holding.quantity * latest_price.price
     
     return portfolio_val
 

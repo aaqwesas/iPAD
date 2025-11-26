@@ -97,11 +97,6 @@ class PortfolioFragment : DialogFragment() {
                     if (holdingsResponse.isSuccessful) {
                         val holdings = holdingsResponse.body() ?: emptyList()
                         adapter.updateHoldings(holdings)
-
-                        if (holdings.isEmpty()) {
-                            // Show empty state message if no holdings
-                            // You could add a TextView for this in your layout
-                        }
                     } else {
                         adapter.updateHoldings(emptyList())
                     }
