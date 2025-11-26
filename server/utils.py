@@ -1,4 +1,5 @@
 import asyncio
+from fastapi import HTTPException
 from sqlmodel import Session, select
 from database import get_db_session
 from models import (
@@ -9,7 +10,6 @@ from models import (
     PriceAlert,
     NameTickerMap,
     UserHolding,
-    UserPortfolio,
 )
 import datetime
 from firebase_admin import messaging
@@ -17,8 +17,6 @@ from sqlalchemy import and_
 
 import yfinance as yf
 import pandas as pd
-
-from response_type import PortfolioResponse
 
 TICKERS = [
     "AAPL",
@@ -33,6 +31,12 @@ TICKERS = [
     "GOOG",
 ]
 
+def _validate_trade(current_qty: float, trade_qty: float) -> None:
+    if trade_qty < 0 and current_qty < abs(trade_qty):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient shares. You have {current_qty} shares, trying to sell {abs(trade_qty)}"
+        )
 
 def clear_stock_history() -> None:
     """Clear all existing stock historical data"""

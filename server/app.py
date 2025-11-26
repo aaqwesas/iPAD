@@ -7,10 +7,40 @@ from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from response_type import AddHoldingRequest, PortfolioResponse, PortfolioUpdate, RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest, UserHoldingResponse, MappingResponse
+from response_type import (
+    AddHoldingRequest,
+    PortfolioResponse,
+    PortfolioUpdate,
+    RegisterResponse,
+    TokenVerify,
+    Stock,
+    StockCreate,
+    StockHistorical,
+    RegisterRequest,
+    FCMUpdate,
+    CreateAlertRequest,
+    UserHoldingResponse,
+    MappingResponse,
+)
 from database import get_db_session, create_tables
-from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert, UserHolding, UserPortfolio, NameTickerMap
-from utils import _portfolio_value, create_data_fetcher, setup_database, send_fcm_notification, TICKERS
+from models import (
+    User,
+    StockPrice,
+    StockHistoricalData,
+    StockHistoricalData_weekly,
+    PriceAlert,
+    UserHolding,
+    UserPortfolio,
+    NameTickerMap,
+)
+from utils import (
+    _portfolio_value,
+    _validate_trade,
+    create_data_fetcher,
+    setup_database,
+    send_fcm_notification,
+    TICKERS,
+)
 
 import firebase_admin
 from firebase_admin import credentials
@@ -23,18 +53,18 @@ if not firebase_admin._apps:
 # Create tables
 create_tables()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    
     data_fetcher = create_data_fetcher(tickers=TICKERS)
-    
+
     try:
         yield
     finally:
         data_fetcher.cancel()
 
-def create_app() -> FastAPI:
 
+def create_app() -> FastAPI:
     app = FastAPI(title="Stock API", version="1.0.0", lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
@@ -43,10 +73,12 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     return app
 
+
 app = create_app()
+
 
 @app.get("/test-push")
 async def test_push():
@@ -55,10 +87,9 @@ async def test_push():
     send_fcm_notification(
         token=test_token,
         title="IT WORKS!",
-        body="Your price alert system is 100% ready!"
+        body="Your price alert system is 100% ready!",
     )
     return {"status": "sent"}
-
 
 
 def generate_token() -> str:
@@ -76,31 +107,30 @@ async def get_all_symbols():
         stmt = select(distinct(StockPrice.symbol)).order_by(StockPrice.symbol)
         symbols = db.exec(stmt).all()
         return symbols
-    
+
 
 @app.get("/users/{token}/portfolio", response_model=PortfolioResponse)
 async def get_portfolio_value(token: str):
     with get_db_session() as db:
         portfolio = db.exec(
-            select(UserPortfolio)
-            .where(UserPortfolio.token == token)
+            select(UserPortfolio).where(UserPortfolio.token == token)
         ).first()
-        
+
         if not portfolio:
             # Return default value if no portfolio exists
             return PortfolioResponse(value=0.0)
-        
+
         return PortfolioResponse(value=portfolio.value)
+
 
 # 2. Update portfolio value
 @app.put("/users/{token}/portfolio", response_model=PortfolioResponse)
 async def update_portfolio_value(token: str, update: PortfolioUpdate):
     with get_db_session() as db:
         portfolio = db.exec(
-            select(UserPortfolio)
-            .where(UserPortfolio.token == token)
+            select(UserPortfolio).where(UserPortfolio.token == token)
         ).first()
-        
+
         if portfolio:
             # Update existing portfolio
             portfolio.value = update.value
@@ -108,111 +138,120 @@ async def update_portfolio_value(token: str, update: PortfolioUpdate):
             # Create new portfolio if doesn't exist
             portfolio = UserPortfolio(token=token, value=update.value)
             db.add(portfolio)
-        
+
         db.commit()
         db.refresh(portfolio)
         return PortfolioResponse(value=portfolio.value)
-    
-    
+
+
 @app.get("/users/{token}/percentage_change")
 async def get_portfolio_change(token: str):
     with get_db_session() as db:
         new_portfolio_val = _portfolio_value(db=db, token=token)
         portfolio = db.exec(
-            select(UserPortfolio)
-            .where(UserPortfolio.token == token)
+            select(UserPortfolio).where(UserPortfolio.token == token)
         ).first()
         print(new_portfolio_val, portfolio)
         if not portfolio:
             return 0
-        
+
         old_val = portfolio.value
-        
+
         if old_val == 0:
             if new_portfolio_val == 0:
                 return 0
             else:
                 return 100
-        
+
     percentage_change = ((new_portfolio_val - old_val) / old_val) * 100
-    
+
     return round(percentage_change, 2)
+
 
 @app.get("/users/{token}/holdings", response_model=List[UserHoldingResponse])
 async def get_user_holdings(token: str):
     with get_db_session() as db:
         # Query all holdings for this user
         holdings = db.exec(
-            select(UserHolding.stock_ticker, UserHolding.quantity)
-            .where(UserHolding.token == token)
+            select(UserHolding.stock_ticker, UserHolding.quantity).where(
+                UserHolding.token == token
+            )
         ).all()
-        
+
         if not holdings:
-            return []  
-        
+            return []
+
         # Convert to response model
-        return [UserHoldingResponse(stock_ticker=ticker, quantity=quantity) 
-                for ticker, quantity in holdings]
-        
-        
+        return [
+            UserHoldingResponse(stock_ticker=ticker, quantity=quantity)
+            for ticker, quantity in holdings
+        ]
+
+
+@app.get("/users/{token}/holding", response_model=UserHoldingResponse)
+async def get_user_holding(token: str, ticker: str):
+    with get_db_session() as db:
+        holding = db.exec(
+            select(UserHolding.stock_ticker, UserHolding.quantity).where(
+                UserHolding.token == token, UserHolding.stock_ticker == ticker
+            )
+        ).first()
+        if not holding:
+            return
+
+        return holding
+
 
 @app.post("/users/{token}/holdings", response_model=UserHoldingResponse)
 async def add_user_holding(token: str, request: AddHoldingRequest):
     with get_db_session() as db:
-        # Try to find existing holding
-        existing_holding = db.exec(
-            select(UserHolding)
-            .where(
+        holding = db.exec(
+            select(UserHolding).where(
                 UserHolding.token == token,
-                UserHolding.stock_ticker == request.stock_ticker
+                UserHolding.stock_ticker == request.stock_ticker,
             )
         ).first()
+
+        current_qty = holding.quantity if holding else 0.0
         
-        if existing_holding:
-            # Update existing holding
-            existing_holding.quantity += request.quantity
-            
-            # If quantity becomes 0 or negative, remove the holding
-            if existing_holding.quantity <= 0:
-                db.delete(existing_holding)
+        # Validate the trade
+        _validate_trade(current_qty, request.quantity)
+
+        new_qty = current_qty + request.quantity
+
+        if new_qty <= 0:
+            if holding:
+                db.delete(holding)
                 db.commit()
-                return UserHoldingResponse(
-                    stock_ticker=request.stock_ticker, 
-                    quantity=0
-                )
-            else:
-                db.commit()
-                db.refresh(existing_holding)
-                return UserHoldingResponse(
-                    stock_ticker=existing_holding.stock_ticker,
-                    quantity=existing_holding.quantity
-                )
+            return UserHoldingResponse(stock_ticker=request.stock_ticker, quantity=0.0)
+        
+        elif holding:
+            holding.quantity = new_qty
+            db.commit()
+            db.refresh(holding)
+            return UserHoldingResponse(
+                stock_ticker=holding.stock_ticker,
+                quantity=holding.quantity
+            )
+        
         else:
-            # Create new holding if quantity is positive
-            if request.quantity > 0:
-                new_holding = UserHolding(
-                    token=token,
-                    stock_ticker=request.stock_ticker,
-                    quantity=request.quantity
-                )
-                db.add(new_holding)
-                db.commit()
-                db.refresh(new_holding)
-                return UserHoldingResponse(
-                    stock_ticker=new_holding.stock_ticker,
-                    quantity=new_holding.quantity
-                )
-            else:
-                # If trying to add negative quantity to non-existent holding, return 0
-                return UserHoldingResponse(
-                    stock_ticker=request.stock_ticker,
-                    quantity=0
-                )
+            new_holding = UserHolding(
+                token=token,
+                stock_ticker=request.stock_ticker,
+                quantity=new_qty,
+            )
+            db.add(new_holding)
+            db.commit()
+            db.refresh(new_holding)
+            return UserHoldingResponse(
+                stock_ticker=new_holding.stock_ticker,
+                quantity=new_holding.quantity
+            )
 
 @app.post("/api/generate-token", response_model=RegisterResponse)
 def register(data: RegisterRequest):
     email = data.email.strip().lower()
-    
+
     with get_db_session() as db:
         # Check if user exists by "token" (which is email)
         user = db.exec(select(User).where(User.token == email)).first()
@@ -226,7 +265,6 @@ def register(data: RegisterRequest):
             return {"message": "Welcome back", "is_new": False}
 
 
-
 @app.post("/api/verify-token")
 def verify_token_endpoint(token_data: TokenVerify):
     """Verify if a token exists in the database"""
@@ -237,12 +275,15 @@ def verify_token_endpoint(token_data: TokenVerify):
         return {"valid": True, "message": "Token is valid"}
     else:
         return {"valid": False, "message": "Invalid token"}
-    
+
+
 @app.get("/api/companyname/{symbol}", response_model=MappingResponse)
 def get_company_name(symbol):
     """Get company name by symbol"""
     with get_db_session() as db:
-        statement = select(distinct(NameTickerMap.companyName)).where(NameTickerMap.symbol == symbol.upper())
+        statement = select(distinct(NameTickerMap.companyName)).where(
+            NameTickerMap.symbol == symbol.upper()
+        )
         get_company_name = db.exec(statement).first()
 
         return MappingResponse(companyName=get_company_name)
@@ -261,6 +302,7 @@ def get_stocks():
                 unique_stocks[stock.symbol] = Stock.model_validate(stock)
         return list(unique_stocks.values())
 
+
 @app.get("/api/stocks/history/{symbol}", response_model=List[StockHistorical])
 def get_stock_history_daily(symbol: str):
     """Get historical stock data for a specific symbol"""
@@ -274,7 +316,8 @@ def get_stock_history_daily(symbol: str):
         if not stocks:
             raise HTTPException(status_code=404, detail="Stock not found")
         return [StockHistorical.model_validate(stock) for stock in stocks]
-    
+
+
 @app.get("/api/stocks/history/weekly/{symbol}", response_model=List[StockHistorical])
 def get_stock_history_weekly(symbol: str):
     """Get historical weekly stock data for a specific symbol"""
@@ -288,6 +331,7 @@ def get_stock_history_weekly(symbol: str):
         if not stocks:
             raise HTTPException(status_code=404, detail="Stock not found")
         return [StockHistoricalData_weekly.model_validate(stock) for stock in stocks]
+
 
 @app.get("/api/stocks/{symbol}", response_model=Stock)
 def get_stock(symbol: str):
@@ -303,6 +347,7 @@ def get_stock(symbol: str):
             raise HTTPException(status_code=404, detail="Stock not found")
         return Stock.model_validate(stock)
 
+
 @app.post("/api/stocks", response_model=Stock)
 def create_stock(stock: StockCreate):
     """Create new stock price entry"""
@@ -313,13 +358,12 @@ def create_stock(stock: StockCreate):
             change=stock.change,
             change_percent=stock.change_percent,
             volume=stock.volume,
-            timestamp=stock.timestamp
+            timestamp=stock.timestamp,
         )
         db.add(db_stock)
         db.refresh(db_stock)
         return Stock.model_validate(db_stock)
-        
-        
+
 
 @app.get("/api/health")
 def health_check():
@@ -329,44 +373,45 @@ def health_check():
 @app.post("/api/set-fcm-token")
 def set_fcm_token(data: FCMUpdate):
     email = data.email.strip().lower()
-    
+
     with get_db_session() as db:
         # ← token column now holds the email!
         user = db.exec(select(User).where(User.token == email)).first()
         if not user:
             raise HTTPException(404, "User not found – register first")
-        
+
         user.fcm_token = data.fcm_token
         db.add(user)
         db.commit()
-    
-    return {"status": "ok"}
 
+    return {"status": "ok"}
 
 
 @app.post("/api/alerts")
 def create_alert(req: CreateAlertRequest):
     email = req.email.strip().lower()
-    
+
     with get_db_session() as db:
         user = db.exec(select(User).where(User.token == email)).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         alert = PriceAlert(
             id=user.id,
-            user_token=email,       
+            user_token=email,
             symbol=req.symbol.upper(),
             target=req.target,
-            condition=req.condition
+            condition=req.condition,
         )
         db.add(alert)
         db.commit()
         db.refresh(alert)
-    
+
     return {"status": "alert created"}
+
 
 if __name__ == "__main__":
     import uvicorn
+
     setup_database()
     uvicorn.run(app, host="0.0.0.0", port=8000)

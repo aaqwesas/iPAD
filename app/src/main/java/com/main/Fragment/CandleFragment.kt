@@ -207,6 +207,7 @@ class CandleFragment : Fragment() {
         // Determine the actual quantity to add (positive for buy, negative for sell)
         val tradeQuantity = if (isBuyMode) quantity.toFloat() else -quantity.toFloat()
 
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Get token and check if it's null
