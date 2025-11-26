@@ -8,6 +8,8 @@ from models import (
     StockHistoricalData_weekly,
     PriceAlert,
     NameTickerMap,
+    UserHolding,
+    UserPortfolio,
 )
 import datetime
 from firebase_admin import messaging
@@ -16,7 +18,20 @@ from sqlalchemy import and_
 import yfinance as yf
 import pandas as pd
 
-TICKERS = ["AAPL", "TSLA", "VOO", "3115.HK", "NVDA", "BBAI", "NVO", "SOXL", "QBTZ", "GOOG"]
+from response_type import PortfolioResponse
+
+TICKERS = [
+    "AAPL",
+    "TSLA",
+    "VOO",
+    "3115.HK",
+    "NVDA",
+    "BBAI",
+    "NVO",
+    "SOXL",
+    "QBTZ",
+    "GOOG",
+]
 
 
 def clear_stock_history() -> None:
@@ -147,31 +162,25 @@ def preprocess_data(ticker: str, data: pd.DataFrame) -> StockPrice:
     return stock_record
 
 
-def process_ticker(ticker: str, db: Session, interval: str, period: str) -> None:
-    try:
-        data: pd.DataFrame = yf.download(
-            tickers=ticker,
-            period=period,
-            interval=interval,
-            auto_adjust=True,
-            multi_level_index=False,
-        )  # type: ignore
+def process_ticker(ticker: str, db: Session, interval: str, period: str) -> StockPrice | None:
+    data: pd.DataFrame = yf.download(
+        tickers=ticker,
+        period=period,
+        interval=interval,
+        auto_adjust=True,
+        multi_level_index=False,
+    )  # type: ignore
 
-        if data.empty:
-            print(f"[{ticker}] No data from yfinance")
-            return None
-
-        stock_record = preprocess_data(ticker=ticker, data=data)
-
-        db.add(stock_record)
-        db.commit()
-
-        return stock_record
-
-    except Exception as e:
-        print(f"[{ticker}] yfinance failed: {e}")
-        db.rollback()
+    if data.empty:
+        print(f"[{ticker}] No data from yfinance")
         return None
+
+    stock_record = preprocess_data(ticker=ticker, data=data)
+
+    db.add(stock_record)
+
+    return stock_record
+
 
 
 async def fetch_and_store_stock_data(tickers: list[str]):
@@ -235,88 +244,101 @@ async def stock_price_watcher(tickers: list[str]):
             # print(ticker)
             # db = next(get_db_session())  # fresh session per ticker
             with get_db_session() as db:
-                try:
-                    # 1. Fetch + store new price (blocking → run in thread)
-                    loop = asyncio.get_event_loop()
-                    result = await loop.run_in_executor(
-                        None, process_ticker, ticker, db, "1d", "2d"
-                    )
+                # 1. Fetch + store new price (blocking → run in thread)
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(
+                    None, process_ticker, ticker, db, "1d", "2d"
+                )
 
-                    if not result:
-                        continue
+                if not result:
+                    continue
 
-                    current_price = (
-                        result.price
-                    )  # ← this is the latest price you just saved
+                current_price = (
+                    result.price
+                )  # ← this is the latest price you just saved
 
-
-                    # print(current_price)
-                    # if (ticker.upper() == "3115.HK"):
-                    #     print(current_price)
-                    # 2. IMMEDIATELY AFTER saving → check alerts for this ticker
-                    alerts = db.exec(
-                        select(PriceAlert).where(
-                            and_(
-                                PriceAlert.symbol == ticker.upper(),
-                                PriceAlert.is_active == True,
-                                PriceAlert.notified == False,
-                            )
+                # print(current_price)
+                # if (ticker.upper() == "3115.HK"):
+                #     print(current_price)
+                # 2. IMMEDIATELY AFTER saving → check alerts for this ticker
+                alerts = db.exec(
+                    select(PriceAlert).where(
+                        and_(
+                            PriceAlert.symbol == ticker.upper(),
+                            PriceAlert.is_active == True,
+                            PriceAlert.notified == False,
                         )
-                    ).all()
+                    )
+                ).all()
 
-                    # print('work')
-                    for alert in alerts:
-                        # print(alert)
-                        # print(current_price)
-                        # print(alert.target)
-                        triggered = False
+                # print('work')
+                for alert in alerts:
+                    # print(alert)
+                    # print(current_price)
+                    # print(alert.target)
+                    triggered = False
 
-                        if (
-                            alert.condition in ("above", "rises_above")
-                            and current_price > alert.target
-                        ):
-                            triggered = True
-                        elif (
-                            alert.condition in ("below", "drops_below")
-                            and current_price < alert.target
-                        ):
-                            triggered = True
+                    if (
+                        alert.condition in ("above", "rises_above")
+                        and current_price > alert.target
+                    ):
+                        triggered = True
+                    elif (
+                        alert.condition in ("below", "drops_below")
+                        and current_price < alert.target
+                    ):
+                        triggered = True
 
-                        if triggered:
-                            user = db.exec(
-                                select(User).where(User.token == alert.user_token)
-                            ).first()
-                            if user and user.fcm_token:
-                                title = f"{ticker} Alert Triggered!"
-                                direction = (
-                                    "above" if "above" in alert.condition else "below"
-                                )
-                                body = f"{ticker} is now ${current_price:.2f} ({direction} ${alert.target})"
+                    if triggered:
+                        user = db.exec(
+                            select(User).where(User.token == alert.user_token)
+                        ).first()
+                        if user and user.fcm_token:
+                            title = f"{ticker} Alert Triggered!"
+                            direction = (
+                                "above" if "above" in alert.condition else "below"
+                            )
+                            body = f"{ticker} is now ${current_price:.2f} ({direction} ${alert.target})"
 
-                                # Fire and forget (non-blocking)
-                                asyncio.create_task(
-                                    send_notification_async(user.fcm_token, title, body)
-                                )
+                            # Fire and forget (non-blocking)
+                            asyncio.create_task(
+                                send_notification_async(user.fcm_token, title, body)
+                            )
 
-                            # Mark as done
-                            alert.notified = True
-                            alert.is_active = False
-                            alert.triggered_at = datetime.datetime.now()
-                            alert.triggered_price = current_price
-                            db.add(alert)
-
-                    db.commit()  # commit price + alert updates together
-
-                except Exception as e:
-                    # print(f"Error processing {ticker}: {e}")
-                    db.rollback()
-                finally:
-                    db.close()
+                        # Mark as done
+                        alert.notified = True
+                        alert.is_active = False
+                        alert.triggered_at = datetime.datetime.now()
+                        alert.triggered_price = current_price
+                        db.add(alert)
 
         # Sleep until next minute
         elapsed = asyncio.get_event_loop().time() - start_time
         await asyncio.sleep(max(0, 60 - elapsed))
 
+def _portfolio_value(db: Session, token: str) -> float:
+    statement = select(StockPrice).order_by(StockPrice.timestamp.desc())
+    stocks = db.exec(statement).all()
+    
+    holdings = db.exec(
+        select(UserHolding.stock_ticker, UserHolding.quantity)
+        .where(UserHolding.token == token)
+    ).all()
+    
+    temp_dict = {
+        ticker: price 
+        for ticker, price in holdings
+    }
+    
+    portfolio_val = 0
+    
+    for stock in stocks:
+        if stock.symbol not in temp_dict:
+            continue
+        portfolio_val += temp_dict[stock.symbol] * stock.price
+            
+    
+    return portfolio_val
 
 def insert_stock_data():
     """Download and insert latest stock data as new records"""
@@ -326,13 +348,13 @@ def insert_stock_data():
         for ticker in tickers:
             process_ticker(ticker=ticker, db=db, period="5d", interval="1d")
             tickerInfo = yf.Ticker(ticker)
-            process_ticker_name(ticker=ticker, companyName=tickerInfo.info['longName'], db=db)
-            
+            process_ticker_name(
+                ticker=ticker, companyName=tickerInfo.info["longName"], db=db
+            )
+
+
 def process_ticker_name(ticker, companyName, db):
-    db.add(NameTickerMap(
-        symbol = ticker.upper(),
-        companyName = companyName
-    ))
+    db.add(NameTickerMap(symbol=ticker.upper(), companyName=companyName))
     db.commit()
 
 
@@ -345,4 +367,3 @@ def setup_database():
 
 if __name__ == "__main__":
     setup_database()
-

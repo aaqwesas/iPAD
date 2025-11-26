@@ -81,14 +81,14 @@ class PortfolioFragment : DialogFragment() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Get portfolio value
-                val portfolioResponse = RetrofitClient.apiService.getPortfolioValue(token)
+                val portfolioResponse = RetrofitClient.apiService.getPortfolioPercentageChange(token)
 
                 // Get user holdings
                 val holdingsResponse = RetrofitClient.apiService.getUserHoldings(token)
 
                 withContext(Dispatchers.Main) {
                     if (portfolioResponse.isSuccessful) {
-                        val portfolioValue = portfolioResponse.body()?.value ?: 0.0f
+                        val portfolioValue = portfolioResponse.body()
                         updatePortfolioData("${String.format("%.2f", portfolioValue)}%", "Today")
                     } else {
                         updatePortfolioData("0.00%", "Today")

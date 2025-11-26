@@ -2,10 +2,11 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
 
+
 class User(SQLModel, table=True):
     __tablename__: str = "users"
-    token: str = Field(unique=True, index=True)
     id: Optional[int] = Field(default=None, primary_key=True)
+    token: str = Field(unique=True, index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     fcm_token: Optional[str] = None
 
@@ -15,14 +16,15 @@ class UserPortfolio(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     token: str = Field(foreign_key="users.token")
     value: float
-    
-    
+
+
 class UserHolding(SQLModel, table=True):
     __tablename__ = "user_holdings"
     id: Optional[int] = Field(default=None, primary_key=True)
     token: str = Field(foreign_key="users.token")
     stock_ticker: str = Field(index=True)
     quantity: float
+
 
 class StockPrice(SQLModel, table=True):
     __tablename__: str = "stock_prices"
@@ -39,6 +41,7 @@ class StockPrice(SQLModel, table=True):
     low_price: Optional[float] = None
     close_price: Optional[float] = None
 
+
 class StockHistoricalData(SQLModel, table=True):
     __tablename__: str = "stock_historical_data"
 
@@ -50,6 +53,7 @@ class StockHistoricalData(SQLModel, table=True):
     low_price: float
     close_price: float
     volume: int
+
 
 class StockHistoricalData_weekly(SQLModel, table=True):
     __tablename__: str = "stock_historical_data_weekly"
@@ -63,6 +67,7 @@ class StockHistoricalData_weekly(SQLModel, table=True):
     close_price: float
     volume: int
 
+
 class PriceAlert(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_token: str = Field(foreign_key="users.token", index=True)
@@ -75,9 +80,11 @@ class PriceAlert(SQLModel, table=True):
     triggered_at: Optional[datetime] = None
     triggered_price: Optional[float] = None
 
+
 class NameTickerMap(SQLModel, table=True):
     __tablename__: str = "company_name"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     symbol: str = Field(index=True)
     companyName: str
+

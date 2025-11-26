@@ -69,4 +69,6 @@ interface StockApiService {
         @Path("token") token: String,
         @Body request: AddHoldingRequest
     ): Response<UserHoldingResponse>
+    @GET("users/{token}/percentage_change")
+    suspend fun getPortfolioPercentageChange(@Path("token") token: String): Response<Double>
 }

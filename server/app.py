@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from response_type import AddHoldingRequest, PortfolioResponse, PortfolioUpdate, RegisterResponse, TokenVerify, Stock, StockCreate, StockHistorical, RegisterRequest, FCMUpdate, CreateAlertRequest, UserHoldingResponse, MappingResponse
 from database import get_db_session, create_tables
 from models import User, StockPrice, StockHistoricalData, StockHistoricalData_weekly, PriceAlert, UserHolding, UserPortfolio, NameTickerMap
-from utils import create_data_fetcher, setup_database, send_fcm_notification, TICKERS
+from utils import _portfolio_value, create_data_fetcher, setup_database, send_fcm_notification, TICKERS
 
 import firebase_admin
 from firebase_admin import credentials
@@ -112,6 +112,30 @@ async def update_portfolio_value(token: str, update: PortfolioUpdate):
         db.commit()
         db.refresh(portfolio)
         return PortfolioResponse(value=portfolio.value)
+    
+    
+@app.get("/users/{token}/percentage_change")
+async def get_portfolio_change(token: str):
+    with get_db_session() as db:
+        new_portfolio_val = _portfolio_value(db=db, token=token)
+        portfolio = db.exec(
+            select(UserPortfolio)
+            .where(UserPortfolio.token == token)
+        ).first()
+        if not portfolio:
+            return 0
+        
+        old_val = portfolio.value
+        
+        if old_val == 0:
+            if new_portfolio_val == 0:
+                return 0
+            else:
+                return 100
+        
+    percentage_change = ((new_portfolio_val - old_val) / old_val) * 100
+    
+    return round(percentage_change, 2)
 
 @app.get("/users/{token}/holdings", response_model=List[UserHoldingResponse])
 async def get_user_holdings(token: str):
@@ -129,6 +153,8 @@ async def get_user_holdings(token: str):
         return [UserHoldingResponse(stock_ticker=ticker, quantity=quantity) 
                 for ticker, quantity in holdings]
         
+        
+
 @app.post("/users/{token}/holdings", response_model=UserHoldingResponse)
 async def add_user_holding(token: str, request: AddHoldingRequest):
     with get_db_session() as db:
@@ -198,23 +224,6 @@ def register(data: RegisterRequest):
         else:
             return {"message": "Welcome back", "is_new": False}
 
-# def generate_token_endpoint():
-#     """Generate a new user token"""
-#     token = generate_token()
-
-#     with get_db_session() as db:
-#         statement = select(User).where(User.token == token)
-#         existing_user = db.exec(statement).first()
-#         if existing_user:
-#             token = generate_token()
-#             statement = select(User).where(User.token == token)
-#             existing_user = db.exec(statement).first()
-
-
-#         db_user = User(token=token)
-#         db.add(db_user)
-        
-#     return {"token": token, "message": "Token generated successfully"}
 
 
 @app.post("/api/verify-token")
@@ -332,6 +341,8 @@ def set_fcm_token(data: FCMUpdate):
     
     return {"status": "ok"}
 
+
+
 @app.post("/api/alerts")
 def create_alert(req: CreateAlertRequest):
     email = req.email.strip().lower()
@@ -342,7 +353,7 @@ def create_alert(req: CreateAlertRequest):
             raise HTTPException(status_code=404, detail="User not found")
         
         alert = PriceAlert(
-            user_id=user.id,
+            id=user.id,
             user_token=email,       
             symbol=req.symbol.upper(),
             target=req.target,

@@ -74,11 +74,11 @@ class HomeFragment : Fragment() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val portfolioResponse = RetrofitClient.apiService.getPortfolioValue(token)
+                val portfolioResponse = RetrofitClient.apiService.getPortfolioPercentageChange(token)
 
                 withContext(Dispatchers.Main) {
                     if (portfolioResponse.isSuccessful) {
-                        val portfolioValue = portfolioResponse.body()?.value ?: 0.0f
+                        val portfolioValue = portfolioResponse.body()
                         // Format as percentage (you might want to calculate actual percentage change)
                         updatePortfolioData("${String.format("%.2f", portfolioValue)}%", "Today")
                     } else {
