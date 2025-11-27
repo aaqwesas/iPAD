@@ -31,6 +31,7 @@ class HomeFragment : Fragment() {
     private lateinit var txtDailyPL: TextView
     private lateinit var portfolioBox: View
     private lateinit var sharedPreferences: SharedPreferences
+    private val symbolToNameMap = mutableMapOf<String, String>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -149,9 +150,24 @@ class HomeFragment : Fragment() {
 
                 val apiStocks = response.body() ?: emptyList()
 
+                apiStocks.forEach { apiStock ->
+                    try {
+                        val nameResponse = RetrofitClient.apiService.get_company_name(apiStock.symbol)
+                        if (nameResponse.isSuccessful) {
+                            val companyName = nameResponse.body()?.companyName ?: apiStock.symbol // fallback to ticker
+                            symbolToNameMap[apiStock.symbol] = companyName
+                        } else {
+                            symbolToNameMap[apiStock.symbol] = apiStock.symbol // fallback
+                        }
+                    } catch (e: Exception) {
+                        symbolToNameMap[apiStock.symbol] = apiStock.symbol // fallback on error
+                    }
+                }
+
                 val stocks = apiStocks.map { apiStock ->
                     Stock(
                         ticker = apiStock.symbol,
+                        stockName = symbolToNameMap[apiStock.symbol] ?: apiStock.symbol,
                         price = apiStock.price,
                         change = apiStock.change,
                         changePercent = apiStock.change_percent,
@@ -160,7 +176,9 @@ class HomeFragment : Fragment() {
                 }
 
                 // Create mapping: ticker → name
-                val tickerToNameMap = apiStocks.associate { it.symbol to it.name }
+//                val tickerToNameMap = apiStocks.associate { it.symbol to it.name }
+
+                val tickerToNameMap = symbolToNameMap
 
                 withContext(Dispatchers.Main) {
                     setupRecyclerView(tickerToNameMap)

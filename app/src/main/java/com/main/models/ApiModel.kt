@@ -15,6 +15,11 @@ data class FCMUpdateRequest(
     val fcm_token: String
 )
 
+data class CompanyNameResponse(
+    val companyName: String
+)
+
+
 data class SimpleResponse(val status: String)
 
 data class CreateAlertRequest(

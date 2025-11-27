@@ -2,6 +2,7 @@ package com.main.Data
 
 data class Stock(
     val ticker: String,
+    val stockName: String = "",
     val price: Double,
     val change: Double,
     val changePercent: Double,

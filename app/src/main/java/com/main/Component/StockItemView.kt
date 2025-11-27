@@ -26,6 +26,7 @@ class StockItemView @JvmOverloads constructor(
 
     fun setStock(stock: Stock) {
         tvStockTicker.text = stock.ticker
+        tvStockName.text = stock.stockName
         tvStockPrice.text = context.getString(R.string.stock_price_format, stock.price)
 
         val changeText = String.format(Locale.US, "%.2f", abs(stock.change))

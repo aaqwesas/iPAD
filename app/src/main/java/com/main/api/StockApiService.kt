@@ -13,6 +13,7 @@ import com.main.models.TokenVerifyRequest
 import com.main.models.FCMUpdateRequest
 import com.main.models.CreateAlertRequest
 import com.main.models.SimpleResponse
+import com.main.models.CompanyNameResponse
 import com.main.models.Stock
 import com.main.models.OHLC
 import com.main.models.OHLC_history
@@ -32,6 +33,9 @@ interface StockApiService {
 
     @POST("api/alerts")
     suspend fun createAlert(@Body request: CreateAlertRequest): Response<SimpleResponse>
+
+    @GET("api/companyname/{symbol}")
+    suspend fun get_company_name(@Path("symbol") symbol: String): Response<CompanyNameResponse>
 
     @GET("api/stocks")
     suspend fun getStocks(): Response<List<Stock>>

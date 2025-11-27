@@ -295,6 +295,16 @@ async def stock_price_watcher(tickers: list[str]):
                         and current_price < alert.target
                     ):
                         triggered = True
+                    elif (
+                        alert.condition in ("dayup")
+                        and current_price < alert.target
+                    ):
+                        triggered = True
+                    elif (
+                        alert.condition in ("daydown")
+                        and current_price < alert.target
+                    ):
+                        triggered = True 
 
                     if triggered:
                         user = db.exec(

@@ -338,7 +338,6 @@ def get_company_name(symbol):
 
         return MappingResponse(companyName=get_company_name)
 
-
 @app.get("/api/stocks", response_model=List[Stock])
 def get_stocks():
     """Get all stock prices (latest per symbol)"""
