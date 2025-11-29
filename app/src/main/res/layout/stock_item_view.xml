@@ -50,7 +50,8 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/guideline"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="8dp" />
 
         <!-- Change Value -->
         <TextView
@@ -59,7 +60,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:gravity="end"
-            android:maxLines="1"
+            android.maxLines="1"
             android:text="+2.50"
             android:textColor="@android:color/holo_green_dark"
             android:textSize="14sp"
@@ -88,7 +89,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.7" />
+            app:layout_constraintGuide_percent="0.85" />
 
         <TextView
             android:id="@+id/tv_stock_name"
