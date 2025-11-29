@@ -1,5 +1,3 @@
-package com.example.ipad
-
 import com.main.Data.AddHoldingRequest
 import com.main.Data.PortfolioUpdate
 import com.main.api.StockApiService
