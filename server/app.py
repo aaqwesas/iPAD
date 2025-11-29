@@ -3,6 +3,7 @@ import datetime
 import uuid
 from contextlib import asynccontextmanager
 
+from sqlalchemy import and_
 from sqlmodel import select, distinct
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +23,7 @@ from response_type import (
     CreateAlertRequest,
     UserHoldingResponse,
     MappingResponse,
+    AlertResponse,
 )
 from database import get_db_session, create_tables
 from models import (
@@ -462,6 +464,20 @@ def create_alert(req: CreateAlertRequest):
 
     return {"status": "alert created"}
 
+@app.get("/api/alerts/{token}", response_model=list[AlertResponse])
+def get_alerts(token: str):
+    """Get user's alerts"""
+    with get_db_session() as db:
+        statement = (
+            select(PriceAlert)
+            .where(PriceAlert.user_token == token)
+            )
+        alerts = db.exec(statement).all()
+        
+        return [
+            AlertResponse(symbol=alert.symbol, target=alert.target, condition=alert.condition)
+            for alert in alerts
+        ]
 
 # # In app.py, create a new function for the snapshot
 # def snapshot_daily_portfolio_values():

@@ -99,3 +99,8 @@ class CreateAlertRequest(BaseModel):
     symbol: str
     target: float
     condition: str
+
+class AlertResponse(BaseModel):
+    symbol: str
+    target: float
+    condition: str
