@@ -247,23 +247,46 @@ async def stock_price_watcher(tickers: list[str]):
     while True:
         start_time = asyncio.get_event_loop().time()
 
+        with get_db_session() as db:
+            users = db.exec(select(User)).all()
+            for user in users:
+                new_portfolio_val = _portfolio_value(db=db, token=user.token)
+                portfolio = db.exec(
+                    select(UserPortfolio).where(UserPortfolio.token == user.token)
+                ).first()
+
+
+                if portfolio:
+                    old_val = portfolio.value
+                    if old_val == 0:
+                        percentage_change = 0
+
+                    percentage_change = ((new_portfolio_val - old_val) / old_val) * 100
+
+        # percentage_change & new_portfolio_val
+
+        tickers = ["CUSTOMIZED PORTFOLIO"] + tickers
         # print(tickers)
         for ticker in tickers:
             # print(ticker)
             # db = next(get_db_session())  # fresh session per ticker
             with get_db_session() as db:
-                # 1. Fetch + store new price (blocking → run in thread)
-                loop = asyncio.get_event_loop()
-                result = await loop.run_in_executor(
-                    None, process_ticker, ticker, db, "1d", "2d"
-                )
 
-                if not result:
-                    continue
+                if ticker != "CUSTOMIZED PORTFOLIO":
+                    # 1. Fetch + store new price (blocking → run in thread)
+                    loop = asyncio.get_event_loop()
+                    result = await loop.run_in_executor(
+                        None, process_ticker, ticker, db, "1d", "2d"
+                    )
 
-                current_price = (
-                    result.price
-                )  # ← this is the latest price you just saved
+                    if not result:
+                        continue
+
+                    current_price = (
+                        result.price
+                    )  # ← this is the latest price you just saved
+                else: 
+                    current_price = new_portfolio_val
 
                 # print(current_price)
                 # if (ticker.upper() == "3115.HK"):
@@ -329,46 +352,7 @@ async def stock_price_watcher(tickers: list[str]):
                         alert.triggered_at = datetime.datetime.now()
                         alert.triggered_price = current_price
                         db.add(alert)
-
-        with get_db_session() as db:
-            users = db.exec(select(User)).all()
-            for user in users:
-                new_portfolio_val = _portfolio_value(db=db, token=user.token)
-                portfolio = db.exec(
-                    select(UserPortfolio).where(UserPortfolio.token == user.token)
-                ).first()
-
-# (in server/utils.py, inside the stock_price_watcher function)
-
-                if portfolio:
-                    # Use previous_day_value as the baseline for daily changes
-                    old_val = portfolio.previous_day_value  # FIX: Use previous_day_value instead of value
-                    portfolio.value = new_portfolio_val
-                    value_change = new_portfolio_val - old_val
-
-                    if old_val == 0:
-                        percentage_change = 100.0 if new_portfolio_val > 0 else 0.0
-                    else:
-                        percentage_change = (value_change / old_val) * 100
-
-                    print(f"User {user.token}:")
-                    print(f"  Portfolio Value Change (vs Day Start): {value_change:.2f}")
-                    print(f"  Portfolio Percentage Change (vs Day Start): {percentage_change:.2f}%")
-
-                    # Only update the current value, keep previous_day_value unchanged
-                    portfolio.value = new_portfolio_val
-                    db.add(portfolio)
-
-                # This block runs if a user has holdings but no portfolio record yet.
-                else:
-                    # Check if there's an actual value before creating a record
-                    if new_portfolio_val > 0:
-                        print(f"Creating new portfolio record for user {user.token} with value {new_portfolio_val:.2f}")
-                        new_portfolio = UserPortfolio(
-                            token=user.token,
-                            value=new_portfolio_val,
-                        )
-                        db.add(new_portfolio)
+                
 
         # Commit all DB changes for all users at the end of the loop
         with get_db_session() as db_commit:

@@ -47,8 +47,8 @@ from utils import (
 import firebase_admin
 from firebase_admin import credentials
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
+# from apscheduler.schedulers.asyncio import AsyncIOScheduler
+# from apscheduler.triggers.cron import CronTrigger
 
 # Initialize Firebase Admin SDK (only once)
 if not firebase_admin._apps:
@@ -464,43 +464,43 @@ def create_alert(req: CreateAlertRequest):
     return {"status": "alert created"}
 
 
-# In app.py, create a new function for the snapshot
-def snapshot_daily_portfolio_values():
-    """Ran once daily to snapshot the current portfolio value as the new baseline."""
-    print("Running end-of-day portfolio snapshot...")
-    with get_db_session() as db:
-        portfolios = db.exec(select(UserPortfolio)).all()
-        for portfolio in portfolios:
-            # Set the baseline for the next day's comparison
-            portfolio.previous_day_value = portfolio.value
-            db.add(portfolio)
-        db.commit()
-    print("End-of-day snapshot complete.")
+# # In app.py, create a new function for the snapshot
+# def snapshot_daily_portfolio_values():
+#     """Ran once daily to snapshot the current portfolio value as the new baseline."""
+#     print("Running end-of-day portfolio snapshot...")
+#     with get_db_session() as db:
+#         portfolios = db.exec(select(UserPortfolio)).all()
+#         for portfolio in portfolios:
+#             # Set the baseline for the next day's comparison
+#             portfolio.previous_day_value = portfolio.value
+#             db.add(portfolio)
+#         db.commit()
+#     print("End-of-day snapshot complete.")
 
 
-# In app.py, modify the lifespan context manager to include the new scheduler
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # Start the real-time stock price watcher
-    data_fetcher = create_data_fetcher(tickers=TICKERS)
+# # In app.py, modify the lifespan context manager to include the new scheduler
+# @asynccontextmanager
+# async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+#     # Start the real-time stock price watcher
+#     data_fetcher = create_data_fetcher(tickers=TICKERS)
 
-    # ADD THE DAILY SCHEDULER
-    scheduler = AsyncIOScheduler()
-    # Schedule the snapshot to run every day at midnight server time
-    scheduler.add_job(
-        snapshot_daily_portfolio_values,
-        trigger=CronTrigger(hour=0, minute=0, second=0)
-    )
-    scheduler.start()
+#     # ADD THE DAILY SCHEDULER
+#     scheduler = AsyncIOScheduler()
+#     # Schedule the snapshot to run every day at midnight server time
+#     scheduler.add_job(
+#         snapshot_daily_portfolio_values,
+#         trigger=CronTrigger(hour=0, minute=0, second=0)
+#     )
+#     scheduler.start()
 
-    try:
-        yield
-    finally:
-        # Clean up background tasks on shutdown
-        print("Shutting down background tasks...")
-        data_fetcher.cancel()
-        scheduler.shutdown()
-        print("Shutdown complete.")
+#     try:
+#         yield
+#     finally:
+#         # Clean up background tasks on shutdown
+#         print("Shutting down background tasks...")
+#         data_fetcher.cancel()
+#         scheduler.shutdown()
+#         print("Shutdown complete.")
 
 
 
