@@ -55,6 +55,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("com.google.android.material:material:1.9.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation(libs.androidx.junit.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -74,6 +75,7 @@ dependencies {
     testImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
     testImplementation("com.google.code.gson:gson:2.10.1")
     testImplementation("org.robolectric:robolectric:4.10.3")
+    testImplementation("androidx.annotation:annotation:1.7.0")
 
     // AndroidTest dependencies
     androidTestImplementation("androidx.test:runner:1.5.2")

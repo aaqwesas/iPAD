@@ -85,7 +85,6 @@ class HomeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("HomeFragment", "Failed to load portfolio data", e)
-                // Keep default values on error
             }
         }
     }
