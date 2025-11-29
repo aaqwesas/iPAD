@@ -475,7 +475,7 @@ def get_alerts(token: str):
         alerts = db.exec(statement).all()
         
         return [
-            AlertResponse(symbol=alert.symbol, target=alert.target, condition=alert.condition)
+            AlertResponse(symbol=alert.symbol, target=alert.target, condition=alert.condition, is_triggered=alert.notified, trigger_time=alert.triggered_at.strftime("%Y-%m-%d %H:%M:%S") if alert.triggered_at else None)
             for alert in alerts
         ]
 

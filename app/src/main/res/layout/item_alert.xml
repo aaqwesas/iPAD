@@ -65,6 +65,16 @@
                     android:textColor="?attr/colorPrimary"
                     tools:text="$150.00" />
             </LinearLayout>
+            <TextView
+                android:id="@+id/alert_triggered"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:textColor="#D32F2F"
+                android:textStyle="italic"
+                android:visibility="gone"
+                tools:text="Triggered at 2025-04-05 14:30" />
         </LinearLayout>
 
     </LinearLayout>

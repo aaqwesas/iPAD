@@ -104,3 +104,5 @@ class AlertResponse(BaseModel):
     symbol: str
     target: float
     condition: str
+    is_triggered: bool
+    trigger_time: str | None = None

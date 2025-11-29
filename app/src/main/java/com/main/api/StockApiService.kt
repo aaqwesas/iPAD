@@ -12,13 +12,13 @@ import com.main.models.RegisterRequest
 import com.main.models.TokenVerifyRequest
 import com.main.models.FCMUpdateRequest
 import com.main.models.CreateAlertRequest
+import com.main.models.AlertResponse
 import com.main.models.SimpleResponse
 import com.main.models.CompanyNameResponse
 import com.main.models.Stock
 import com.main.models.OHLC
 import com.main.models.OHLC_history
 import com.main.models.PortfolioHistoryResponse
-import com.main.models.PortfolioValueResponse
 import com.main.models.VerifyTokenResponse
 
 interface StockApiService {
@@ -93,4 +93,9 @@ interface StockApiService {
         @Path("token") token: String,
         @Query("limit") limit: Int = 30
     ): Response<List<PortfolioHistoryResponse>>
+
+    @GET("api/alerts/{token}")
+    suspend fun getAlertHistory(
+        @Path("token") token: String
+    ): Response<List<AlertResponse>>
 }

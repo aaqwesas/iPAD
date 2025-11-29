@@ -83,7 +83,7 @@ class PriceAlert(SQLModel, table=True):
     user_token: str = Field(foreign_key="users.token", index=True)
     symbol: str
     target: float
-    condition: str  # "above", "below", "dayup", "daydown", "volume above"
+    condition: str  # "above", "below", "dayup", "daydown", "volume above", "CUSTOMIZED PORTFOLIO"
     is_active: bool = True
     notified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now())

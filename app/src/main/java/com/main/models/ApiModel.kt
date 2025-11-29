@@ -29,6 +29,14 @@ data class CreateAlertRequest(
     val condition: String  // "above", "below", "rises_above", "drops_below"
 )
 
+data class AlertResponse(
+    val symbol: String,
+    val target: Double,
+    val condition: String,  // "above", "below", "dayup", "daydown", "CUSTOMIZED PORTFOLIO"
+    val is_triggered: Boolean,
+    val trigger_time: String?
+)
+
 data class TokenVerifyRequest(
     val token: String
 )

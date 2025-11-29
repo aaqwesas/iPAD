@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ipad.R
 
-data class Alert(val symbol: String, val condition: String, val target: String)
+data class Alert(val symbol: String, val condition: String, val target: String, val triggeredInfo: String = "")
 
 class AlertsAdapter(private val alerts: List<Alert>) : RecyclerView.Adapter<AlertsAdapter.ViewHolder>() {
 
@@ -21,6 +21,12 @@ class AlertsAdapter(private val alerts: List<Alert>) : RecyclerView.Adapter<Aler
         holder.symbolTextView.text = alert.symbol
         holder.conditionTextView.text = alert.condition
         holder.targetTextView.text = alert.target
+        if (alert.triggeredInfo.isNotEmpty()) {
+            holder.triggeredTextView.text = alert.triggeredInfo
+            holder.triggeredTextView.visibility = View.VISIBLE
+        } else {
+            holder.triggeredTextView.visibility = View.GONE
+        }
     }
 
     override fun getItemCount() = alerts.size
@@ -29,5 +35,6 @@ class AlertsAdapter(private val alerts: List<Alert>) : RecyclerView.Adapter<Aler
         val symbolTextView: TextView = itemView.findViewById(R.id.alert_symbol)
         val conditionTextView: TextView = itemView.findViewById(R.id.alert_condition)
         val targetTextView: TextView = itemView.findViewById(R.id.alert_target)
+        val triggeredTextView: TextView = itemView.findViewById(R.id.alert_triggered)
     }
 }
