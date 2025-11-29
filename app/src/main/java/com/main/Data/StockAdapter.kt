@@ -21,8 +21,12 @@ class StockAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StockViewHolder {
-        val stockItemView = StockItemView(parent.context)
-        return StockViewHolder(stockItemView)
+        val view = StockItemView(parent.context)
+        view.layoutParams = RecyclerView.LayoutParams(
+            RecyclerView.LayoutParams.MATCH_PARENT,
+            RecyclerView.LayoutParams.WRAP_CONTENT
+        )
+        return StockViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: StockViewHolder, position: Int) {

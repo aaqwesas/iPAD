@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.example.ipad.R
 import com.main.Data.Stock
@@ -16,14 +17,24 @@ class StockItemView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
-    private val view = LayoutInflater.from(context).inflate(R.layout.stock_item_view, this, true)
+    init {
 
-    private val tvStockTicker = view.findViewById<android.widget.TextView>(R.id.tv_stock_ticker)
-    private val tvStockName = view.findViewById<android.widget.TextView>(R.id.tv_stock_name)
-    private val tvStockPrice = view.findViewById<android.widget.TextView>(R.id.tv_stock_price)
-    private val tvStockChange = view.findViewById<android.widget.TextView>(R.id.tv_stock_change)
-    private val tvStockChangePercent = view.findViewById<android.widget.TextView>(R.id.tv_stock_change_percent)
+    }
 
+    private val tvStockTicker: TextView
+    private val tvStockName: TextView
+    private val tvStockPrice: TextView
+    private val tvStockChange: TextView
+    private val tvStockChangePercent: TextView
+
+    init {
+        val view = LayoutInflater.from(context).inflate(R.layout.stock_item_view, this, true)
+        tvStockTicker = view.findViewById(R.id.tv_stock_ticker)
+        tvStockName = view.findViewById(R.id.tv_stock_name)
+        tvStockPrice = view.findViewById(R.id.tv_stock_price)
+        tvStockChange = view.findViewById(R.id.tv_stock_change)
+        tvStockChangePercent = view.findViewById(R.id.tv_stock_change_percent)
+    }
     fun setStock(stock: Stock) {
         tvStockTicker.text = stock.ticker
         tvStockName.text = stock.stockName

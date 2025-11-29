@@ -46,10 +46,9 @@ class HomeFragment : Fragment() {
 
         // Initialize SharedPreferences
         sharedPreferences = requireContext().getSharedPreferences("TokenPrefs", Context.MODE_PRIVATE)
-        print((sharedPreferences))
         setupPortfolioBox()
         loadStockData()
-        loadPortfolioData() // Load actual portfolio data
+        loadPortfolioData()
 
         return view
     }
@@ -76,7 +75,6 @@ class HomeFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     if (portfolioResponse.isSuccessful) {
                         val portfolioValue = portfolioResponse.body()
-                        // Format as percentage (you might want to calculate actual percentage change)
                         updatePortfolioData("${String.format("%.2f", portfolioValue)}%", "Today")
                     } else {
                         // Keep default values if API fails
@@ -93,7 +91,6 @@ class HomeFragment : Fragment() {
         txtPortfolioValue.text = performance
         txtDailyPL.text = timePeriod
 
-        // Set color based on performance (green for positive, red for negative)
         val color = if (performance.startsWith("-")) {
             resources.getColor(android.R.color.holo_red_dark, null)
         } else {
@@ -139,48 +136,46 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadStockData() {
-
         CoroutineScope(Dispatchers.IO).launch {
             val response = RetrofitClient.apiService.getStocks()
-            if (response.isSuccessful) {
+            if (!response.isSuccessful || response.body() == null) return@launch
 
-                val apiStocks = response.body() ?: emptyList()
+            val apiStocks = response.body()!!
 
-                apiStocks.forEach { apiStock ->
-                    try {
-                        val nameResponse = RetrofitClient.apiService.get_company_name(apiStock.symbol)
-                        if (nameResponse.isSuccessful) {
-                            val companyName = nameResponse.body()?.companyName ?: apiStock.symbol // fallback to ticker
-                            symbolToNameMap[apiStock.symbol] = companyName
-                        } else {
-                            symbolToNameMap[apiStock.symbol] = apiStock.symbol // fallback
-                        }
-                    } catch (e: Exception) {
-                        symbolToNameMap[apiStock.symbol] = apiStock.symbol // fallback on error
+            val symbolToNameMap = mutableMapOf<String, String>()
+
+            apiStocks.forEach { apiStock ->
+                val symbol = apiStock.symbol                       // ← THIS LINE FIXES EVERYTHING
+                try {
+                    val nameResponse = RetrofitClient.apiService.get_company_name(symbol)
+                    val name = if (nameResponse.isSuccessful && nameResponse.body() != null) {
+                        nameResponse.body()!!.companyName
+                    } else {
+                        symbol
                     }
+                    symbolToNameMap[symbol] = name                   // now uses the correct symbol
+                } catch (e: Exception) {
+                    symbolToNameMap[symbol] = symbol
                 }
+            }
 
-                val stocks = apiStocks.map { apiStock ->
-                    Stock(
-                        ticker = apiStock.symbol,
-                        stockName = symbolToNameMap[apiStock.symbol] ?: apiStock.symbol,
-                        price = apiStock.price,
-                        change = apiStock.change,
-                        changePercent = apiStock.change_percent,
-                        volume = apiStock.volume
-                    )
-                }
+            val stocks = apiStocks.map { apiStock ->
+                Stock(
+                    ticker = apiStock.symbol,
+                    stockName = symbolToNameMap[apiStock.symbol] ?: apiStock.symbol,
+                    price = apiStock.price,
+                    change = apiStock.change,
+                    changePercent = apiStock.change_percent,
+                    volume = apiStock.volume
+                )
+            }
 
-                // Create mapping: ticker → name
-//                val tickerToNameMap = apiStocks.associate { it.symbol to it.name }
-
-                val tickerToNameMap = symbolToNameMap
-
-                withContext(Dispatchers.Main) {
-                    setupRecyclerView(tickerToNameMap)
-                    adapter.updateStocks(stocks)
-                }
+            withContext(Dispatchers.Main) {
+                setupRecyclerView(symbolToNameMap)
+                adapter.updateStocks(stocks)
             }
         }
     }
+
+
 }
