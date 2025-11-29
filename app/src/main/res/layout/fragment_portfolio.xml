@@ -131,9 +131,10 @@
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Portfolio Chart Section -->
+    <!-- Portfolio Chart Section -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
@@ -143,7 +144,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -152,7 +153,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -179,13 +181,12 @@
 
             </LinearLayout>
 
-            <!-- Line Chart Placeholder -->
+            <!-- Line Chart - FIXED CONSTRAINTS -->
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/portfolio_chart"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_margin="16dp"
-                android:minHeight="180dp" />
+                android:layout_height="150dp"
+                android:minHeight="150dp" />
 
         </LinearLayout>
 

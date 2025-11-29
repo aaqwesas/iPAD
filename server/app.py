@@ -125,6 +125,8 @@ async def get_portfolio_history(token: str, limit: int = 30):
             )
             for result in raw_results
         ]
+        history_list.reverse()
+
 
         return history_list  # Return the list of response model objects
 

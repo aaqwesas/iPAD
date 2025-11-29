@@ -1,7 +1,5 @@
 package com.main.Fragment
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -25,7 +23,6 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.main.Data.UserHoldingResponse
 import com.main.api.RetrofitClient
 import com.main.models.PortfolioHistoryResponse
-import com.main.models.PortfolioValueResponse // If you still use this elsewhere
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,22 +37,12 @@ class PortfolioFragment : DialogFragment() {
     private lateinit var txtDailyPL: TextView
     private lateinit var txtPerformanceChange: TextView
     private lateinit var portfolioChart: LineChart
-    // Remove the SharedPreferences declaration as we'll get the token from arguments
-    // private lateinit var sharedPreferences: SharedPreferences
     private lateinit var adapter: PortfolioAdapter
 
-    // Define a SimpleDateFormat for parsing the timestamp string
-    private val timestampFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
-        // Adjust timezone if your server sends UTC and you want to display in local
-        // timeZone = TimeZone.getTimeZone("UTC")
-    }
-
     companion object {
-        // Define a key for the argument
         const val ARG_TOKEN = "token"
 
-        // Helper function to create a new instance with the token
-        fun newInstance(token: String?): PortfolioFragment {
+        fun newInstance(token: String): PortfolioFragment {
             val fragment = PortfolioFragment()
             val args = Bundle()
             args.putString(ARG_TOKEN, token)
@@ -74,48 +61,28 @@ class PortfolioFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Retrieve the token from arguments
         val token = arguments?.getString(ARG_TOKEN)
         if (token == null) {
-            Log.e("PortfolioFragment", "Token is null in arguments!")
-            // Handle error: maybe show a message and dismiss the dialog
-            dismiss() // Close the dialog if no token is provided
+            Log.e("PortfolioFragment", "Token is null!")
+            dismiss()
             return
         }
 
-        // Find views
+        initViews(view)
+        setupRecyclerView()
+        setupChart()
+        loadPortfolioData(token)
+    }
+
+    private fun initViews(view: View) {
         recyclerView = view.findViewById(R.id.recycler_view_portfolio)
         txtPortfolioValue = view.findViewById(R.id.txt_portfolio_value)
         txtDailyPL = view.findViewById(R.id.txt_daily_pl)
         txtPerformanceChange = view.findViewById(R.id.txt_performance_change)
         portfolioChart = view.findViewById(R.id.portfolio_chart)
+
         val closeButton = view.findViewById<ImageButton>(R.id.btn_close)
-
-        // Setup close button
-        closeButton.setOnClickListener {
-            handleClose()
-        }
-
-        // Setup RecyclerView
-        setupRecyclerView()
-
-        // Setup chart
-        setupChart()
-
-        // Load portfolio data using the token from arguments
-        loadPortfolioData(token)
-    }
-
-    private fun handleClose() {
-        dismiss()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        dialog?.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        closeButton.setOnClickListener { dismiss() }
     }
 
     private fun setupRecyclerView() {
@@ -127,202 +94,216 @@ class PortfolioFragment : DialogFragment() {
     }
     private fun setupChart() {
         portfolioChart.apply {
-            // Basic look & feel
+            // Clear any previous data
+            clear()
+
+            // Basic configuration
             description.isEnabled = false
             setTouchEnabled(true)
-            isDragEnabled = true
+            setDragEnabled(true)
             setScaleEnabled(true)
-            setPinchZoom(true)                 // Disable pinch in small dialogs (prevents weird zoom)
+            setPinchZoom(true)
             setDrawGridBackground(false)
-            legend.isEnabled = false
+            setNoDataText("Loading portfolio history...")
+            setNoDataTextColor(Color.GRAY)
 
-            // THE SAFEST OFFSETS POSSIBLE
-            // These values work perfectly from 150dp → 400dp chart height
-            setViewPortOffsets(45f, 10f, 20f, 40f)   // left, top, right, bottom (in dp)
-
-            // Extra safety: guarantee minimum visible area
-            setExtraOffsets(8f, 8f, 8f, 8f)         // tiny breathing room
-
-            // X Axis – clean and reliable
+            // X Axis
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 setDrawGridLines(false)
-                setDrawLabels(true)
+                granularity = 1f
                 textColor = Color.GRAY
                 textSize = 10f
-                granularity = 1f
-                isGranularityEnabled = true
-                setAvoidFirstLastClipping(true)     // Prevents labels from being cut off
-                setCenterAxisLabels(false)
             }
 
-            // Y Axis – beautiful auto-scaling with guaranteed padding
+            // Y Axis
             axisLeft.apply {
                 setDrawGridLines(true)
-                gridColor = Color.parseColor("#1AFFFFFF")  // Very light on dark, works on light too
+                gridColor = Color.parseColor("#E0E0E0")
                 textColor = Color.GRAY
                 textSize = 10f
-
-                // This combo is magic: perfect fit, never clipped
-                setLabelCount(5, true)      // Force 5 horizontal lines
-                spaceTop = 18f              // ~18% extra space at top
-                spaceBottom = 18f           // ~18% extra space at bottom
-
-                // NEVER set axisMinimum/axisMaximum manually unless you have a very specific reason
-                // Let MPAndroidChart calculate it — it’s smarter than us
-                resetAxisMinimum()
-                resetAxisMaximum()
             }
 
-            // Right axis – always disable
+            // Disable right axis
             axisRight.isEnabled = false
-
-            // Final safety net: make sure old data doesn’t interfere
-            clear()
-            data = null
+            legend.isEnabled = false
         }
     }
 
-    // Update the function to accept the token as a parameter
     private fun loadPortfolioData(token: String) {
-
-        // The token is now passed as a parameter, no need to get it from SharedPreferences
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Get portfolio value (assuming you have this endpoint)
+                Log.d("PortfolioFragment", "Loading portfolio data...")
+
                 val portfolioResponse = RetrofitClient.apiService.getPortfolioValue(token)
-
-
-
-                // Get user holdings
                 val holdingsResponse = RetrofitClient.apiService.getUserHoldings(token)
-
-                // Get portfolio history for chart - Use the correct endpoint that returns objects
-                val historyResponse = RetrofitClient.apiService.getPortfolioHistory(token, 100)
-
-
+                val historyResponse = RetrofitClient.apiService.getPortfolioHistory(token, 30)
 
                 withContext(Dispatchers.Main) {
+                    // Handle portfolio value
                     if (portfolioResponse.isSuccessful) {
                         val portfolioValue = portfolioResponse.body()?.value ?: 0f
-                        updatePortfolioData("$${String.format("%.2f", portfolioValue)}", "0.00%", "Today")
+                        txtPortfolioValue.text = "$${String.format("%.2f", portfolioValue)}"
                     } else {
-                        updatePortfolioData("$0.00", "0.00%", "Today")
+                        txtPortfolioValue.text = "$0.00"
                     }
 
+                    // Handle holdings
                     if (holdingsResponse.isSuccessful) {
                         val holdings = holdingsResponse.body() ?: emptyList()
                         adapter.updateHoldings(holdings)
-                        // Update holdings count
                         view?.findViewById<TextView>(R.id.txt_holdings_count)?.text = "${holdings.size} stocks"
+                        Log.d("PortfolioFragment", "Loaded ${holdings.size} holdings")
                     } else {
                         adapter.updateHoldings(emptyList())
                         view?.findViewById<TextView>(R.id.txt_holdings_count)?.text = "0 stocks"
                     }
 
+                    // Handle history data - CRITICAL PART
                     if (historyResponse.isSuccessful) {
-                        val historyData = historyResponse.body() ?: emptyList()
-                        if (historyData.isNotEmpty()) {
+                        val historyData = historyResponse.body()
+                        Log.d("PortfolioFragment", "History API success: ${historyData?.size ?: 0} items")
+
+                        if (!historyData.isNullOrEmpty()) {
                             updateChartWithData(historyData)
                         } else {
-                            showEmptyChart()
+                            Log.d("PortfolioFragment", "History data is empty")
+                            showEmptyChart("No portfolio history available")
                         }
                     } else {
-                        showEmptyChart()
+                        Log.e("PortfolioFragment", "History API error: ${historyResponse.code()}")
+                        showEmptyChart("Failed to load history data")
                     }
                 }
             } catch (e: Exception) {
-                Log.e("PortfolioFragment", "Failed to load portfolio data", e)
+                Log.e("PortfolioFragment", "Network error: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    updatePortfolioData("$0.00", "0.00%", "Today")
+                    showEmptyChart("Network error")
                     adapter.updateHoldings(emptyList())
-                    view?.findViewById<TextView>(R.id.txt_holdings_count)?.text = "0 stocks"
-                    showEmptyChart()
+                    txtPortfolioValue.text = "$0.00"
                 }
             }
         }
     }
 
-    private fun showEmptyChart() {
+    private fun showEmptyChart(message: String) {
         portfolioChart.clear()
-        portfolioChart.setNoDataText("No data available")
-        portfolioChart.setNoDataTextColor(Color.GRAY)
+        portfolioChart.setNoDataText(message)
         portfolioChart.invalidate()
     }
 
-    private fun updatePortfolioData(totalValue: String, performance: String, timePeriod: String) {
-        txtPortfolioValue.text = totalValue
-        txtPerformanceChange.text = performance
-        txtDailyPL.text = timePeriod
-
-        // Set color based on performance
-        val color = if (performance.startsWith("-")) {
-            ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
-        } else {
-            ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark)
-        }
-        txtPerformanceChange.setTextColor(color)
-
-        // Update background based on performance
-        val backgroundRes = if (performance.startsWith("-")) {
-            R.drawable.bg_negative_pill
-        } else {
-            R.drawable.bg_positive_pill
-        }
-        txtPerformanceChange.setBackgroundResource(backgroundRes)
-    }
-
     private fun updateChartWithData(historyData: List<PortfolioHistoryResponse>) {
+        Log.d("PortfolioFragment", "updateChartWithData called with ${historyData.size} items")
+
         if (historyData.isEmpty()) {
-            showEmptyChart()
+            showEmptyChart("No data available")
             return
         }
 
-        val entries = mutableListOf<Entry>()
-        val labels = mutableListOf<String>()
+        // Create entries - use data in the order received
+        val entries = ArrayList<Entry>()
+        val xAxisLabels = ArrayList<String>()
 
-        historyData.forEachIndexed { i, it ->
-            entries.add(Entry(i.toFloat(), it.value))
-            try {
-                val date = timestampFormat.parse(it.timestamp)
-                labels.add(SimpleDateFormat("MMM dd", Locale.getDefault()).format(date!!))
-            } catch (e: Exception) {
-                labels.add("")
-            }
+        historyData.forEachIndexed { index, history ->
+            entries.add(Entry(index.toFloat(), history.value))
+
+            // Simple labels - use day numbers to avoid timestamp parsing issues
+            xAxisLabels.add(if (index == 0) "Start" else "D${index + 1}")
+
+            Log.d("PortfolioFragment", "Entry $index: value=${history.value}")
         }
 
-        val dataSet = LineDataSet(entries, "").apply {
-            color = ContextCompat.getColor(requireContext(), android.R.color.holo_blue_dark)
-            setCircleColor(color)
-            lineWidth = 2.5f
-            circleRadius = 3f
-            setDrawValues(false)
-            setDrawFilled(true)
-            fillColor = ContextCompat.getColor(requireContext(), android.R.color.holo_blue_bright)
-            fillAlpha = 60
-            mode = LineDataSet.Mode.CUBIC_BEZIER
+        // Create dataset with basic styling
+        val dataSet = LineDataSet(entries, "Portfolio Value").apply {
+            color = Color.parseColor("#4CAF50") // Green line
+            lineWidth = 3f
+            setDrawCircles(true)
+            circleRadius = 4f
+            setCircleColor(Color.parseColor("#4CAF50"))
+            setDrawValues(false) // Don't show values on points
+            setDrawFilled(true) // Fill area under line
+            fillColor = Color.parseColor("#804CAF50") // Semi-transparent green
+            fillAlpha = 100
+            mode = LineDataSet.Mode.LINEAR // Use linear instead of cubic for reliability
         }
 
+        // Create line data
+        val lineData = LineData(dataSet)
+        lineData.setValueTextSize(11f)
+
+        // Apply to chart
         portfolioChart.apply {
+            // Clear previous data
             clear()
-            data = LineData(dataSet)
 
-            xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-            xAxis.labelCount = minOf(6, labels.size)
+            // Set new data
+            data = lineData
 
+            // Configure X axis with labels
+            xAxis.apply {
+                valueFormatter = IndexAxisValueFormatter(xAxisLabels)
+                labelCount = minOf(6, xAxisLabels.size)
+                granularity = 1f
+                setCenterAxisLabels(false)
+            }
+
+            // Configure Y axis to auto-scale with padding
+            axisLeft.apply {
+                resetAxisMinimum()
+                resetAxisMaximum()
+                // Add some padding to prevent clipping
+                setSpaceTop(15f)
+                setSpaceBottom(15f)
+            }
+
+            fitScreen()
+            setVisibleXRangeMaximum(historyData.size.toFloat())
+
+            // Refresh chart
             notifyDataSetChanged()
             invalidate()
+
+            // Animate
+            animateX(1000)
+            animateY(1000)
         }
 
-        // Update performance
+        Log.d("PortfolioFragment", "Chart updated with ${entries.size} entries")
+
+        // Update performance text
+        updatePerformanceText(historyData)
+    }
+
+    private fun updatePerformanceText(historyData: List<PortfolioHistoryResponse>) {
         if (historyData.size >= 2) {
-            val first = historyData.first().value
-            val last = historyData.last().value
-            val change = (last - first) / first * 100
-            val perf = if (change >= 0) "+%.2f%%".format(change) else "%.2f%%".format(change)
-            updatePortfolioData("$${"%.2f".format(last)}", perf, "${historyData.size} days")
+            val firstValue = historyData.first().value
+            val lastValue = historyData.last().value
+            val change = ((lastValue - firstValue) / firstValue) * 100
+            val changeText = if (change >= 0) "+${String.format("%.2f", change)}%"
+            else "${String.format("%.2f", change)}%"
+
+            txtPerformanceChange.text = changeText
+            txtDailyPL.text = "${historyData.size} days"
+
+            // Set color based on performance
+            val color = if (change >= 0) android.R.color.holo_green_dark
+            else android.R.color.holo_red_dark
+            txtPerformanceChange.setTextColor(ContextCompat.getColor(requireContext(), color))
+
+            val bgRes = if (change >= 0) R.drawable.bg_positive_pill
+            else R.drawable.bg_negative_pill
+            txtPerformanceChange.setBackgroundResource(bgRes)
+
+            // Update portfolio value to latest
+            txtPortfolioValue.text = "$${String.format("%.2f", lastValue)}"
+        } else if (historyData.size == 1) {
+            val currentValue = historyData.first().value
+            txtPortfolioValue.text = "$${String.format("%.2f", currentValue)}"
+            txtPerformanceChange.text = "0.00%"
+            txtDailyPL.text = "Today"
         }
     }
+
     // Portfolio Adapter
     inner class PortfolioAdapter(private var holdings: List<UserHoldingResponse>) :
         RecyclerView.Adapter<PortfolioAdapter.PortfolioViewHolder>() {
