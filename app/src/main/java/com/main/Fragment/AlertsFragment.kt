@@ -26,8 +26,7 @@ enum class AlertType {
     PRICE_ABOVE,
     PRICE_BELOW,
     PERCENTAGE_RISE,
-    PERCENTAGE_FALL,
-    VOLUME
+    PERCENTAGE_FALL
 }
 
 class AlertsFragment : Fragment() {
@@ -50,10 +49,6 @@ class AlertsFragment : Fragment() {
     private val priceFallConditions = listOf(
         AlertCondition("Price drops to", "50.00", true, AlertType.PRICE_BELOW),
         AlertCondition("1D fall exceeds", "3%", false, AlertType.PERCENTAGE_FALL)
-    )
-
-    private val marketDataConditions = listOf(
-        AlertCondition("Volume exceeds", "1M", true, AlertType.VOLUME)
     )
 
     data class AlertCondition(
@@ -153,8 +148,7 @@ class AlertsFragment : Fragment() {
                     setupSpinner(StockRepository.stockNames)
                     binding.stockSpinner.visibility = View.VISIBLE
                     Toast.makeText(requireContext(), "Using cached stock data", Toast.LENGTH_SHORT).show()
-                }
-            }
+                }            }
         }
     }
 
@@ -178,7 +172,7 @@ class AlertsFragment : Fragment() {
 
             updateConditionsWithSelectedStock(ticker)
 
-            val enabledAlerts = (priceRiseConditions + priceFallConditions + marketDataConditions)
+            val enabledAlerts = (priceRiseConditions + priceFallConditions)
                 .filter { it.isEnabled }
                 .mapNotNull { condition ->
                     mapToCreateAlertRequest(email, selectedStock, condition)
@@ -235,40 +229,24 @@ class AlertsFragment : Fragment() {
 
     private fun mapToCreateAlertType(
         type: AlertType,
-        value: String,
-        isPrice: Boolean
+        value: String
     ): Pair<String, Double>? {
         val cleanedValue = when (type) {
             AlertType.PERCENTAGE_RISE,
             AlertType.PERCENTAGE_FALL -> value.replace("%", "").replace(",", "")
-            AlertType.VOLUME -> value
             else -> value.replace(",", "")
         }
 
-        val targetValue = when (type) {
-            AlertType.VOLUME -> parseVolume(cleanedValue)
-            else -> cleanedValue.toDoubleOrNull()
-        } ?: return null
+        val targetValue = cleanedValue.toDoubleOrNull() ?: return null
 
         val conditionStr = when (type) {
             AlertType.PRICE_ABOVE -> "above"
             AlertType.PRICE_BELOW -> "below"
             AlertType.PERCENTAGE_RISE -> "dayup"
             AlertType.PERCENTAGE_FALL -> "daydown"
-            AlertType.VOLUME -> "volume_above"
         }
 
         return conditionStr to targetValue
-    }
-
-    private fun parseVolume(value: String): Double {
-        val clean = value.uppercase().replace(",", "")
-        return when {
-            clean.endsWith("K") -> clean.dropLast(1).toDoubleOrNull()?.times(1_000) ?: 0.0
-            clean.endsWith("M") -> clean.dropLast(1).toDoubleOrNull()?.times(1_000_000) ?: 0.0
-            clean.endsWith("B") -> clean.dropLast(1).toDoubleOrNull()?.times(1_000_000_000) ?: 0.0
-            else -> clean.toDoubleOrNull() ?: 0.0
-        }
     }
 
     private fun mapToCreateAlertRequest(
@@ -276,7 +254,7 @@ class AlertsFragment : Fragment() {
         symbol: String,
         condition: AlertCondition
     ): CreateAlertRequest? {
-        val mapped = mapToCreateAlertType(condition.type, condition.value, condition.type != AlertType.VOLUME)
+        val mapped = mapToCreateAlertType(condition.type, condition.value)
             ?: return null
 
         val (conditionStr, targetValue) = mapped
@@ -291,7 +269,7 @@ class AlertsFragment : Fragment() {
 
 
     private fun updateConditionsWithSelectedStock(ticker: String) {
-        val allConditions = priceRiseConditions + priceFallConditions + marketDataConditions
+        val allConditions = priceRiseConditions + priceFallConditions
         allConditions.forEach { condition ->
             condition.stockSymbol = ticker
         }
@@ -300,7 +278,6 @@ class AlertsFragment : Fragment() {
     private fun setupAlertConditions() {
         setupConditionClicks(binding.priceRiseLayout, priceRiseConditions)
         setupConditionClicks(binding.priceFallLayout, priceFallConditions)
-        setupConditionClicks(binding.marketDataLayout, marketDataConditions)
     }
 
     private fun setupConditionClicks(layout: ViewGroup, conditions: List<AlertCondition>) {
@@ -368,7 +345,6 @@ class AlertsFragment : Fragment() {
             AlertType.PERCENTAGE_RISE, AlertType.PERCENTAGE_FALL -> {
                 value.endsWith("%") && value.dropLast(1).toDoubleOrNull() != null
             }
-            else -> value.isNotBlank()
         }
     }
 
