@@ -2,95 +2,75 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="#F8F9FA"
     tools:context="com.main.Fragment.PortfolioFragment">
 
-    <!-- Portfolio Header with Close Button -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="24dp"
-        android:background="@android:color/white"
-        android:gravity="center_vertical"
-        android:elevation="4dp">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Your Portfolio"
-                android:textSize="32sp"
-                android:textStyle="bold"
-                android:textColor="#1A1A1A"
-                android:fontFamily="sans-serif-medium" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Stock allocations and performance"
-                android:textSize="16sp"
-                android:textColor="#666666"
-                android:fontFamily="sans-serif" />
-
-        </LinearLayout>
-
-        <!-- Close Button -->
-        <ImageButton
-            android:id="@+id/btn_close"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_close"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Close portfolio"
-            android:tint="#666666"
-            android:padding="12dp" />
-
-    </LinearLayout>
-
-    <!-- Portfolio Summary Card -->
+    <!-- Portfolio Summary Card with Close Button -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="12dp"
         android:elevation="8dp"
-        app:cardCornerRadius="16dp"
+        app:cardCornerRadius="20dp"
         app:cardBackgroundColor="@android:color/white">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="20dp">
 
-            <!-- Portfolio Value -->
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Header Row with Title and Close Button -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Total Portfolio Value"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:fontFamily="sans-serif" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/txt_portfolio_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="$0.00"
-                android:textSize="36sp"
-                android:textStyle="bold"
-                android:textColor="#1A1A1A"
-                android:fontFamily="sans-serif-medium" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Portfolio Value"
+                        android:textSize="14sp"
+                        android:textColor="#666666"
+                        android:fontFamily="sans-serif" />
+
+                    <TextView
+                        android:id="@+id/txt_portfolio_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="$0.00"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A1A"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <!-- Close Button -->
+                <ImageButton
+                    android:id="@+id/btn_close"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:src="@drawable/ic_close"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Close portfolio"
+                    android:tint="#666666"
+                    android:padding="10dp" />
+
+            </LinearLayout>
 
             <!-- Performance Row -->
             <LinearLayout
@@ -105,7 +85,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+0.00%"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     android:textStyle="bold"
                     android:textColor="#4CAF50"
                     android:background="@drawable/bg_positive_pill"
@@ -131,15 +111,13 @@
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Portfolio Chart Section -->
-    <!-- Portfolio Chart Section -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="12dp"
         android:elevation="4dp"
-        app:cardCornerRadius="12dp"
+        app:cardCornerRadius="16dp"
         app:cardBackgroundColor="@android:color/white">
 
         <LinearLayout
@@ -154,7 +132,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="12dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -181,12 +159,12 @@
 
             </LinearLayout>
 
-            <!-- Line Chart - FIXED CONSTRAINTS -->
+            <!-- Line Chart -->
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/portfolio_chart"
                 android:layout_width="match_parent"
-                android:layout_height="150dp"
-                android:minHeight="150dp" />
+                android:layout_height="160dp"
+                android:minHeight="160dp" />
 
         </LinearLayout>
 
@@ -197,10 +175,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp"
         android:gravity="center_vertical">
 
         <TextView
@@ -232,6 +209,6 @@
         android:layout_weight="1"
         android:layout_marginTop="4dp"
         android:clipToPadding="false"
-        android:paddingBottom="16dp" />
+        android:paddingBottom="24dp" />
 
 </LinearLayout>

@@ -7,7 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
+
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -26,7 +26,6 @@ class HomeFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: StockAdapter
-    private lateinit var progressBar: ProgressBar
     private lateinit var txtPortfolioValue: TextView
     private lateinit var txtDailyPL: TextView
     private lateinit var portfolioBox: View
@@ -41,7 +40,6 @@ class HomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
         recyclerView = view.findViewById(R.id.recycler_view_stocks)
-        progressBar = view.findViewById(R.id.progress_bar)
         txtPortfolioValue = view.findViewById(R.id.txt_portfolio_value)
         txtDailyPL = view.findViewById(R.id.txt_daily_pl)
         portfolioBox = view.findViewById(R.id.portfolio_box)
@@ -142,7 +140,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadStockData() {
-        progressBar.visibility = View.VISIBLE
 
         CoroutineScope(Dispatchers.IO).launch {
             val response = RetrofitClient.apiService.getStocks()
@@ -183,12 +180,6 @@ class HomeFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     setupRecyclerView(tickerToNameMap)
                     adapter.updateStocks(stocks)
-                    progressBar.visibility = View.GONE
-                }
-            } else {
-                withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
-                    // Handle error (show message, retry, etc.)
                 }
             }
         }

@@ -8,46 +8,6 @@
     tools:context="com.main.Fragment.HomeFragment"
     android:background="@color/light_gray">
 
-    <!-- Header Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:background="@android:color/white"
-        android:gravity="center_vertical">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Market"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/black" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Live stock prices"
-                android:textSize="16sp"
-                android:textColor="@color/dark_gray" />
-
-        </LinearLayout>
-
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:visibility="gone" />
-
-    </LinearLayout>
 
     <!-- Portfolio Summary -->
     <com.google.android.material.card.MaterialCardView
