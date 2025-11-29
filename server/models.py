@@ -17,6 +17,7 @@ class UserPortfolio(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     token: str = Field(foreign_key="users.token")
     value: float
+    previous_day_value: float = Field(default=0.0)
 
 
 class UserHolding(SQLModel, table=True):

@@ -10,6 +10,7 @@ from models import (
     PriceAlert,
     NameTickerMap,
     UserHolding,
+    UserPortfolio,
 )
 import datetime
 from firebase_admin import messaging
@@ -304,7 +305,7 @@ async def stock_price_watcher(tickers: list[str]):
                         alert.condition in ("daydown")
                         and current_price < alert.target
                     ):
-                        triggered = True 
+                        triggered = True
 
                     if triggered:
                         user = db.exec(
@@ -329,6 +330,50 @@ async def stock_price_watcher(tickers: list[str]):
                         alert.triggered_price = current_price
                         db.add(alert)
 
+        with get_db_session() as db:
+            users = db.exec(select(User)).all()
+            for user in users:
+                new_portfolio_val = _portfolio_value(db=db, token=user.token)
+                portfolio = db.exec(
+                    select(UserPortfolio).where(UserPortfolio.token == user.token)
+                ).first()
+
+# (in server/utils.py, inside the stock_price_watcher function)
+
+                if portfolio:
+                    # Use previous_day_value as the baseline for daily changes
+                    old_val = portfolio.previous_day_value  # FIX: Use previous_day_value instead of value
+                    portfolio.value = new_portfolio_val
+                    value_change = new_portfolio_val - old_val
+
+                    if old_val == 0:
+                        percentage_change = 100.0 if new_portfolio_val > 0 else 0.0
+                    else:
+                        percentage_change = (value_change / old_val) * 100
+
+                    print(f"User {user.token}:")
+                    print(f"  Portfolio Value Change (vs Day Start): {value_change:.2f}")
+                    print(f"  Portfolio Percentage Change (vs Day Start): {percentage_change:.2f}%")
+
+                    # Only update the current value, keep previous_day_value unchanged
+                    portfolio.value = new_portfolio_val
+                    db.add(portfolio)
+
+                # This block runs if a user has holdings but no portfolio record yet.
+                else:
+                    # Check if there's an actual value before creating a record
+                    if new_portfolio_val > 0:
+                        print(f"Creating new portfolio record for user {user.token} with value {new_portfolio_val:.2f}")
+                        new_portfolio = UserPortfolio(
+                            token=user.token,
+                            value=new_portfolio_val,
+                        )
+                        db.add(new_portfolio)
+
+        # Commit all DB changes for all users at the end of the loop
+        with get_db_session() as db_commit:
+            db_commit.commit()
+
         # Sleep until next minute
         elapsed = asyncio.get_event_loop().time() - start_time
         await asyncio.sleep(max(0, 60 - elapsed))
@@ -339,8 +384,10 @@ def _portfolio_value(db: Session, token: str) -> float:
     holdings = db.exec(select(UserHolding).where(UserHolding.token == token)).all()
 
     if not holdings:
+        print(f"No holdings found for user {token}")
         return 0.0
 
+    print(f"Calculating portfolio value for user {token}:")
     portfolio_val = 0.0
 
     for holding in holdings:
@@ -353,8 +400,13 @@ def _portfolio_value(db: Session, token: str) -> float:
         ).first()
 
         if latest_price:
-            portfolio_val += holding.quantity * latest_price.price
+            value = holding.quantity * latest_price.price
+            print(f"  - {holding.stock_ticker}: {holding.quantity} * ${latest_price.price:.2f} = ${value:.2f}")
+            portfolio_val += value
+        else:
+            print(f"  - {holding.stock_ticker}: Could not find latest price.")
 
+    print(f"Total portfolio value for user {token}: ${portfolio_val:.2f}")
     return portfolio_val
 
 
