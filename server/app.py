@@ -451,7 +451,6 @@ def create_alert(req: CreateAlertRequest):
             raise HTTPException(status_code=404, detail="User not found")
 
         alert = PriceAlert(
-            id=user.id,
             user_token=email,
             symbol=req.symbol.upper(),
             target=req.target,

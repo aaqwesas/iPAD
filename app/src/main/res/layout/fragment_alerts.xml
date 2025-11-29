@@ -21,13 +21,13 @@
             android:textColor="@color/black"
             android:layout_marginBottom="8dp" />
 
+        <!-- Alert Type Section -->
         <Spinner
             android:id="@+id/stock_spinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
-        <!-- Alert Type Section -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

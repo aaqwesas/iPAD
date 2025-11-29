@@ -253,8 +253,8 @@ class AlertsFragment : Fragment() {
         val conditionStr = when (type) {
             AlertType.PRICE_ABOVE -> "above"
             AlertType.PRICE_BELOW -> "below"
-            AlertType.PERCENTAGE_RISE -> "rises_above"
-            AlertType.PERCENTAGE_FALL -> "drops_below"
+            AlertType.PERCENTAGE_RISE -> "dayup"
+            AlertType.PERCENTAGE_FALL -> "daydown"
             AlertType.VOLUME -> "volume_above"
         }
 

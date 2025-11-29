@@ -247,6 +247,12 @@ async def stock_price_watcher(tickers: list[str]):
     while True:
         start_time = asyncio.get_event_loop().time()
 
+        # fetching portfolio value & percentage change
+
+        # checking if it is portfolio alert (Customized portfolio)
+
+        # alert checking for 
+
         with get_db_session() as db:
             users = db.exec(select(User)).all()
             for user in users:
@@ -285,8 +291,11 @@ async def stock_price_watcher(tickers: list[str]):
                     current_price = (
                         result.price
                     )  # ← this is the latest price you just saved
+                    current_p_change = (result.change_percent)
+
                 else: 
                     current_price = new_portfolio_val
+                    current_p_change = percentage_change
 
                 # print(current_price)
                 # if (ticker.upper() == "3115.HK"):
@@ -304,10 +313,15 @@ async def stock_price_watcher(tickers: list[str]):
 
                 # print('work')
                 for alert in alerts:
+                    print(alert.id)
                     # print(alert)
                     # print(current_price)
                     # print(alert.target)
                     triggered = False
+                    
+                    if alert.condition in ("dayup"):
+                        print(result.close_price)
+                        print(result.open_price)
 
                     if (
                         alert.condition in ("above", "rises_above")
@@ -321,12 +335,12 @@ async def stock_price_watcher(tickers: list[str]):
                         triggered = True
                     elif (
                         alert.condition in ("dayup")
-                        and current_price < alert.target
+                        and current_p_change > alert.target
                     ):
                         triggered = True
                     elif (
                         alert.condition in ("daydown")
-                        and current_price < alert.target
+                        and current_p_change < -alert.target
                     ):
                         triggered = True
 
@@ -336,10 +350,12 @@ async def stock_price_watcher(tickers: list[str]):
                         ).first()
                         if user and user.fcm_token:
                             title = f"{ticker} Alert Triggered!"
-                            direction = (
-                                "above" if "above" in alert.condition else "below"
-                            )
-                            body = f"{ticker} is now ${current_price:.2f} ({direction} ${alert.target})"
+                            if alert.condition in ("below", "above"):
+                                direction = alert.condition
+                                body = f"{ticker} is now ${current_price:.2f} ({direction} ${alert.target})"
+                            elif alert.condition in ("dayup", "daydown"):
+                                direction = "up" if alert.condition in ("dayup") else "down"
+                                body = f"{ticker} is now ${current_price:.2f} ({alert.target}% {direction})"
 
                             # Fire and forget (non-blocking)
                             asyncio.create_task(
@@ -354,9 +370,6 @@ async def stock_price_watcher(tickers: list[str]):
                         db.add(alert)
                 
 
-        # Commit all DB changes for all users at the end of the loop
-        with get_db_session() as db_commit:
-            db_commit.commit()
 
         # Sleep until next minute
         elapsed = asyncio.get_event_loop().time() - start_time

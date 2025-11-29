@@ -79,7 +79,7 @@ class StockHistoricalData_weekly(SQLModel, table=True):
 
 
 class PriceAlert(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True})
     user_token: str = Field(foreign_key="users.token", index=True)
     symbol: str
     target: float
