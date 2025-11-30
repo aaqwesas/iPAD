@@ -356,6 +356,7 @@ def get_stocks():
         for stock in stocks:
             if stock.symbol not in unique_stocks:
                 unique_stocks[stock.symbol] = Stock.model_validate(stock)
+
         return list(unique_stocks.values())
 
 
