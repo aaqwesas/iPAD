@@ -38,7 +38,7 @@ PAD continuously monitors your **entire portfolio** (not just individual tickers
   <img src="./assets/Sign_Up.png"      width="260" height="550" alt="Sign Up"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
   <img src="./assets/Home.png"         width="260" height="550" alt="Home"        style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
   <img src="./assets/Alert_Page.png"   width="260" height="550" alt="Create Alert" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/View_Alert.jpeg"  width="260" height="550" alt="Alert History" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
+  <img src="./assets/View_Alert.png"  width="260" height="550" alt="Alert History" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
   <img src="./assets/Profile.png"      width="260" height="550" alt="Profile"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
   <img src="./assets/Portfolio_Summary.png"      width="260" height="550" alt="Portfolio"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
   <img src="./assets/Trade_Stock.png"      width="260" height="550" alt="Trading"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
