@@ -29,15 +29,15 @@ PAD continuously monitors your **entire portfolio** (not just individual tickers
 | Time-series Database     | Done     | TimescaleDB for efficient storage and historical queries                                     |
 
 
-## Screenshots (Demo)
+## Screenshots
 
-<div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin: 30px 0;">
-  <img src="./assets/Login_page.png"   width="320" height="680" alt="Login"       style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
-  <img src="./assets/Sign_Up.png"      width="320" height="680" alt="Sign Up"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
-  <img src="./assets/Home.png"         width="320" height="680" alt="Home"        style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
-  <img src="./assets/Alert_Page.png"   width="320" height="680" alt="Alerts"      style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
-  <img src="./assets/View_Alert.jpeg"  width="320" height="680" alt="Alert History" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
-  <img src="./assets/Profile.png"      width="320" height="680" alt="Profile"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 30px 0;">
+  <img src="./assets/Login_page.png"   width="260" height="550" alt="Login"       style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
+  <img src="./assets/Sign_Up.png"      width="260" height="550" alt="Sign Up"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
+  <img src="./assets/Home.png"         width="260" height="550" alt="Home"        style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
+  <img src="./assets/Alert_Page.png"   width="260" height="550" alt="Create Alert" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
+  <img src="./assets/View_Alert.jpeg"  width="260" height="550" alt="Alert History" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
+  <img src="./assets/Profile.png"      width="260" height="550" alt="Profile"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
 </div>
 
 
