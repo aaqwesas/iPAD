@@ -30,12 +30,12 @@ PAD continuously monitors your **entire portfolio** (not just individual tickers
 
 
 ## Screenshots (Demo)
-![Login Page](./assets/Login_page.png)
-![SignUp](./assets/Sign_Up.png)
-![Home](./assets/Home.png)
-![Alert](./assets/Alert_Page.png)
-![Alert History](./assets/View_Alert.jpeg)
-![Profile](./assets/Profile.png)
+![Login Page](./assets/Login_page.png){width=600 height=800}
+![SignUp](./assets/Sign_Up.png){width=600 height=800}
+![Home](./assets/Home.png){width=600 height=800}
+![Alert](./assets/Alert_Page.png){width=600 height=800}
+![Alert History](./assets/View_Alert.jpeg){width=600 height=800}
+![Profile](./assets/Profile.png){width=600 height=800}
 
 *(Add actual screenshots here before submission)*
 
