@@ -30,14 +30,17 @@ PAD continuously monitors your **entire portfolio** (not just individual tickers
 
 
 ## Screenshots (Demo)
-![Login Page](./assets/Login_page.png){width=600 height=800}
-![SignUp](./assets/Sign_Up.png){width=600 height=800}
-![Home](./assets/Home.png){width=600 height=800}
-![Alert](./assets/Alert_Page.png){width=600 height=800}
-![Alert History](./assets/View_Alert.jpeg){width=600 height=800}
-![Profile](./assets/Profile.png){width=600 height=800}
 
-*(Add actual screenshots here before submission)*
+<div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin: 30px 0;">
+  <img src="./assets/Login_page.png"   width="320" height="680" alt="Login"       style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img src="./assets/Sign_Up.png"      width="320" height="680" alt="Sign Up"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img src="./assets/Home.png"         width="320" height="680" alt="Home"        style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img src="./assets/Alert_Page.png"   width="320" height="680" alt="Alerts"      style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img src="./assets/View_Alert.jpeg"  width="320" height="680" alt="Alert History" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img src="./assets/Profile.png"      width="320" height="680" alt="Profile"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+</div>
+
+
 
 1. Portfolio Overview  
 2. Stock Detail Page  
