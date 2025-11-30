@@ -5,8 +5,10 @@
 
 ## Project Overview
 
-**Portfolio Anomaly Detector** is a mobile + web application designed specifically for Hong Kong retail investors who actively trade US stocks.  
+**Portfolio Anomaly Detector** is a mobile + web application designed specifically for Hong Kong retail investors who actively trade US/HK stocks.
 Because the US market trades from 9:30 PM to 4:00 AM Hong Kong time, many investors wake up to large overnight gaps – either painful drawdowns or missed buying opportunities.
+
+For HK stocks, because HK workers hae very long working hour that they might need to work during HK market trades hour, so this app help to notify them even during work so that they can take action accordingly 
 
 PAD continuously monitors your **entire portfolio** (not just individual tickers) and sends you a concise morning alert when something important happens while you were sleeping.
 
@@ -60,7 +62,7 @@ PAD continuously monitors your **entire portfolio** (not just individual tickers
 | Notifications      | Firebase Cloud Messaging (FCM) + SMTP               |
 | Development Method | Agile (2-week sprints)                              |
 
-## Quick Start (for reviewers)
+## Quick Start
 
 ### Backend
 ```bash
@@ -71,8 +73,8 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### Mobile (Android)
-Open `mobile/` folder in Android Studio → Run on device/emulator
+### Frontend
+Open `IPAD` folder in Android Studio → Run on device/emulator
 
 
 ## Current Limitations & Known Issues
