@@ -33,28 +33,62 @@ PAD continuously monitors your **entire portfolio** (not just individual tickers
 
 ## Screenshots
 
-<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 30px 0;">
-  <img src="./assets/Login_page.png"   width="260" height="550" alt="Login"       style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/Sign_Up.png"      width="260" height="550" alt="Sign Up"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/Home.png"         width="260" height="550" alt="Home"        style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/Alert_Page.png"   width="260" height="550" alt="Create Alert" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/View_Alert.jpeg"  width="260" height="550" alt="Alert History" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/Profile.png"      width="260" height="550" alt="Profile"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/Portfolio_Summary.png"      width="260" height="550" alt="Portfolio"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/Trade_Stock.png"      width="260" height="550" alt="Trading"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
-  <img src="./assets/CandleStick.png"      width="260" height="550" alt="CandleStick"     style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.12);"/>
+<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 40px 0;">
+  <!-- Login -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/Login_page.png" width="260" height="550" alt="Login Page" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Login</figcaption>
+  </figure>
 
+  <!-- Sign Up -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/Sign_Up.png" width="260" height="550" alt="Sign Up Page" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Sign Up</figcaption>
+  </figure>
 
+  <!-- Home / Portfolio Overview -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/Home.png" width="260" height="550" alt="Home Page" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Home / Portfolio Overview</figcaption>
+  </figure>
 
+  <!-- Create Alert Rule -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/Alert_Page.png" width="260" height="550" alt="Create Alert Rule" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Create Alert Rule</figcaption>
+  </figure>
+
+  <!-- Alert History -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/View_Alert.png" width="260" height="550" alt="Alert History" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Alert History</figcaption>
+  </figure>
+
+  <!-- Profile -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/Profile.png" width="260" height="550" alt="Profile Page" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Profile</figcaption>
+  </figure>
+
+  <!-- Portfolio Summary Detail -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/Portfolio_Summary.png" width="260" height="550" alt="Portfolio Summary" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Portfolio Summary</figcaption>
+  </figure>
+
+  <!-- Trade / Buy-Sell -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/Trade_Stock.png" width="260" height="550" alt="Trade Execution" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Place Order</figcaption>
+  </figure>
+
+  <!-- Candlestick Chart -->
+  <figure style="text-align:center; margin:0;">
+    <img src="./assets/CandleStick.png" width="260" height="550" alt="Candlestick Chart" style="max-width:100%; height:auto; border-radius:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <figcaption style="margin-top:8px; font-size:14px; color:#555; font-weight:500;">Stock Chart (Candlestick)</figcaption>
+  </figure>
 </div>
 
-
-
-1. Portfolio Overview  
-2. Stock Detail Page  
-3. Custom Alert Rule Creation  
-4. Morning Push Notification Example  
-5. Alert History
 
 ## Tech Stack
  
